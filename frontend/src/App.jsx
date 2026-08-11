@@ -16,6 +16,7 @@ function App() {
   const [accountNameInput, setAccountNameInput] = useState('')
   const [accountsList, setAccountsList] = useState([])
   const [isTestingKeys, setIsTestingKeys] = useState(false)
+  const [flowCount, setFlowCount] = useState(0)
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' })
 
   const showToast = (message, type = 'info') => {
@@ -80,7 +81,21 @@ function App() {
         setLogs(prev => [...prev, data.message])
       }
     }
-    return () => ws.close()
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/status`)
+        const data = await res.json()
+        setFlowCount(data.flowCount || 0)
+      } catch(e) {}
+    }
+    checkStatus()
+    const intv = setInterval(checkStatus, 5000)
+
+    return () => {
+      ws.close()
+      clearInterval(intv)
+    }
   }, [])
 
   const logsEndRef = useRef(null)
@@ -318,9 +333,10 @@ function App() {
         </div>
 
         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-          <div className="status-badge">
-            <span className="pulse-dot" style={{backgroundColor: isRunning ? 'var(--success)' : 'var(--text-muted)', animation: isRunning ? 'pulse 2s infinite' : 'none'}}></span> 
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: isRunning ? 'var(--success-light)' : 'var(--bg-card)', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold'}}>
+            <div style={{width: '8px', height: '8px', borderRadius: '50%', background: isRunning ? 'var(--success)' : 'var(--text-muted)'}}></div>
             <span style={{color: isRunning ? 'var(--success)' : 'var(--text-muted)'}}>{isRunning ? 'ONLINE' : 'STANDBY'}</span>
+            <span style={{marginLeft: '4px', paddingLeft: '8px', borderLeft: '1px solid var(--border-color)', color: 'var(--primary)'}}>({flowCount} Flow)</span>
           </div>
 
           {!isRunning ? (

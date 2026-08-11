@@ -114,7 +114,12 @@ async def websocket_logs(websocket: WebSocket):
 
 @app.get("/api/status")
 async def get_status():
-    return {"status": "online"}
+    try:
+        from .bridge_manager import status_snapshot
+        flow_count = status_snapshot().get("total_connected_profiles", 0)
+    except Exception:
+        flow_count = 0
+    return {"status": "online", "flowCount": flow_count}
 
 from typing import Dict, Any
 
