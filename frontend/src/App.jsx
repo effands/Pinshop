@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -33,6 +33,39 @@ function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 4000)
   }
   
+  const [galleryFiles, setGalleryFiles] = useState([])
+  const [isLoadingGallery, setIsLoadingGallery] = useState(false)
+
+  const fetchGallery = async () => {
+    setIsLoadingGallery(true)
+    try {
+      const res = await fetch(`${API_BASE}/gallery`)
+      const data = await res.json()
+      if (data.files) {
+        setGalleryFiles(data.files)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    setIsLoadingGallery(false)
+  }
+
+  const deleteGalleryItem = async (filename) => {
+    if (!confirm("Hapus file ini dari Gallery?")) return
+    try {
+      const res = await fetch(`${API_BASE}/gallery/${filename}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Item berhasil dihapus dari Gallery", "success")
+        fetchGallery()
+      } else {
+        showToast("Gagal menghapus item", "error")
+      }
+    } catch (e) {
+      showToast("Error saat menghapus item", "error")
+    }
+  }
+
   const [manualImages, setManualImages] = useState([])
   const [manualBasicTitle, setManualBasicTitle] = useState('')
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false)
@@ -340,6 +373,9 @@ function App() {
           <div className={`nav-item ${activeTab === 'activity' ? 'active' : ''}`} onClick={() => setActiveTab('activity')}>
             <LayoutDashboard size={18} /> Monitor
           </div>
+          <div className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`} onClick={() => { setActiveTab('gallery'); fetchGallery(); }}>
+            <FolderHeart size={18} /> Gallery
+          </div>
         </div>
 
         <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
@@ -482,6 +518,24 @@ function App() {
                     <option value={3}>3 Gambar (3x)</option>
                     <option value={4}>4 Gambar (4x)</option>
                   </select>
+                </div>
+                 <div className="form-group" style={{flex: '1 1 150px'}}>
+                  <label>Jeda Posting (Detik)</label>
+                  <input 
+                    type="number" 
+                    className="form-control" 
+                    min="1"
+                    value={config.sleepInterval || 10} 
+                    onChange={e => {
+                      const val = parseInt(e.target.value) || 10;
+                      setConfig({...config, sleepInterval: val});
+                      fetch(`${API_BASE}/api/save-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...config, sleepInterval: val})
+                      });
+                    }} 
+                  />
                 </div>
               </div>
             </div>
@@ -744,6 +798,143 @@ function App() {
             <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '10px'}}>
               <button className="btn btn-primary" onClick={saveConfig}>Simpan Konfigurasi</button>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'gallery' && (
+          <div>
+            <div className="panel" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+              <h3 style={{margin: 0}}>🎨 Gallery Hasil Render ({galleryFiles.length} item)</h3>
+              <button className="btn btn-outline" style={{padding: '6px 16px', fontSize: '13px'}} onClick={fetchGallery} disabled={isLoadingGallery}>
+                <RefreshCw size={14} className={isLoadingGallery ? "spin" : ""} /> Refresh Gallery
+              </button>
+            </div>
+            
+            {galleryFiles.length === 0 ? (
+              <div className="panel" style={{textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)'}}>
+                <ImageIcon size={48} style={{opacity: 0.3, marginBottom: '16px'}} />
+                <p>Belum ada foto atau video hasil render di Gallery.</p>
+                <p style={{fontSize: '13px', marginTop: '8px'}}>Mulai autopilot untuk merender media baru!</p>
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '20px',
+                marginBottom: '24px'
+              }}>
+                {galleryFiles.map((file, idx) => (
+                  <div key={idx} className="panel" style={{
+                    padding: '12px',
+                    margin: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'var(--panel-bg)',
+                    borderRadius: '16px',
+                    border: '1px solid var(--panel-border)',
+                    boxShadow: 'var(--panel-shadow)'
+                  }}>
+                    <div style={{
+                      width: '100%',
+                      height: '240px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      backgroundColor: 'rgba(0,0,0,0.05)',
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {file.type === 'video' ? (
+                        <video 
+                          src={`http://127.0.0.1:8001${file.url}`} 
+                          controls 
+                          style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                        />
+                      ) : (
+                        <img 
+                          src={`http://127.0.0.1:8001${file.url}`} 
+                          alt={file.filename} 
+                          style={{width: '100%', height: '100%', objectFit: 'cover'}} 
+                        />
+                      )}
+                      
+                      {/* Floating type indicator */}
+                      <span style={{
+                        position: 'absolute',
+                        top: '8px',
+                        left: '8px',
+                        padding: '4px 8px',
+                        background: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        borderRadius: '20px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        {file.type === 'video' ? <Film size={10} /> : <ImageIcon size={10} />}
+                        {file.type.toUpperCase()}
+                      </span>
+                    </div>
+                    
+                    <div style={{marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px', flex: 1}}>
+                        <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis'}} title={file.filename}>
+                          {file.filename}
+                        </p>
+                        <p style={{fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0'}}>
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB • {new Date(file.created_at * 1000).toLocaleDateString()}
+                        </p>
+                      </div>
+                      
+                      <div style={{display: 'flex', gap: '4px'}}>
+                        <a 
+                          href={`http://127.0.0.1:8001${file.url}`} 
+                          download={file.filename} 
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-outline"
+                          style={{
+                            padding: '8px',
+                            borderRadius: '50%',
+                            width: '32px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Download"
+                        >
+                          <Download size={14} />
+                        </a>
+                        <button 
+                          className="btn btn-danger" 
+                          onClick={() => deleteGalleryItem(file.filename)}
+                          style={{
+                            padding: '8px',
+                            borderRadius: '50%',
+                            width: '32px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(239, 35, 60, 0.1)',
+                            color: 'var(--danger)'
+                          }}
+                          title="Hapus"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

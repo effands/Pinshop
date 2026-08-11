@@ -21,9 +21,12 @@ if sys.platform == "win32":
     _ProactorBasePipeTransport._call_connection_lost = _call_connection_lost_patched
 
 import json
+import os
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -101,6 +104,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+os.makedirs("storage/gallery", exist_ok=True)
+app.mount("/gallery", StaticFiles(directory="storage/gallery"), name="gallery")
+
+@app.get("/api/gallery")
+async def get_gallery():
+    gallery_dir = Path("storage/gallery")
+    gallery_dir.mkdir(parents=True, exist_ok=True)
+    files = []
+    for f in sorted(gallery_dir.glob("*"), key=os.path.getmtime, reverse=True):
+        if f.is_file() and f.suffix.lower() in {".png", ".jpg", ".jpeg", ".mp4"}:
+            files.append({
+                "filename": f.name,
+                "url": f"/gallery/{f.name}",
+                "type": "video" if f.suffix.lower() == ".mp4" else "image",
+                "size": f.stat().st_size,
+                "created_at": os.path.getmtime(f)
+            })
+    return {"success": True, "files": files}
+
+@app.delete("/api/gallery/{filename}")
+async def delete_gallery_item(filename: str):
+    file_path = Path("storage/gallery") / filename
+    # Protect against directory traversal
+    try:
+        resolved_base = Path("storage/gallery").resolve()
+        resolved_file = file_path.resolve()
+        if not resolved_file.is_relative_to(resolved_base):
+            return {"success": False, "error": "Access denied"}
+    except Exception:
+        return {"success": False, "error": "Invalid path"}
+        
+    if file_path.exists():
+        file_path.unlink()
+        return {"success": True}
+    return {"success": False, "error": "File not found"}
 
 @app.websocket("/ws")
 async def extension_ws(websocket: WebSocket):

@@ -160,6 +160,14 @@ async def autopilot_loop(logger_func):
                 video_id = results[0]
                 result_path = "storage/generated.mp4"
                 await download_video(bridge, video_id, result_path)
+                # Copy to gallery
+                try:
+                    import shutil
+                    os.makedirs("storage/gallery", exist_ok=True)
+                    gallery_filename = f"gallery_{int(time.time())}.mp4"
+                    shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                except Exception as e:
+                    logger_func(f"[Warning] Gagal menyalin video ke gallery: {e}")
             else:
                 generate_count = int(config.get("generateCount", 1))
                 logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI ({generate_count}x)...")
@@ -181,6 +189,14 @@ async def autopilot_loop(logger_func):
                     logger_func("[Warning] Gagal mengunduh gambar hasil render.")
                 else:
                     logger_func("> File Foto HD berhasil didownload.")
+                    # Copy to gallery
+                    try:
+                        import shutil
+                        os.makedirs("storage/gallery", exist_ok=True)
+                        gallery_filename = f"gallery_{int(time.time())}.png"
+                        shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                    except Exception as e:
+                        logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
             
             # Target Account
             account_name = config.get("targetAccount")
@@ -226,8 +242,11 @@ async def autopilot_loop(logger_func):
             else:
                 logger_func(f"❌ PIN GAGAL: [{account_name}]")
                 
-            sleep_time = random.randint(300, 600) # 5-10 mins
-            logger_func(f"> Sleep Engine: Beristirahat {sleep_time//60} menit (Anti-Ban) ...")
+            sleep_time = int(config.get("sleepInterval", 10))
+            if sleep_time >= 60:
+                logger_func(f"> Sleep Engine: Beristirahat {sleep_time//60} menit (Anti-Ban) ...")
+            else:
+                logger_func(f"> Sleep Engine: Beristirahat {sleep_time} detik (Anti-Ban) ...")
             
             for _ in range(sleep_time):
                 if not _running: break
