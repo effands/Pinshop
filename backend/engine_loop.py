@@ -310,7 +310,7 @@ async def autopilot_loop(logger_func):
 
                 if gallery_filename:
                     try:
-                        import json
+                        # using global json
                         meta_file = f"storage/gallery/{gallery_filename}.json"
                         with open(meta_file, "w", encoding="utf-8") as mf:
                             json.dump({
@@ -362,7 +362,7 @@ async def autopilot_loop(logger_func):
                     logger_func(f"✅ PIN BERHASIL DIPOSTING ({idx+1}/{len(media_files)}): [{account_name}] {pin_title[:30]}...")
                     if gallery_filename:
                         try:
-                            import json
+                            # using global json
                             meta_file = f"storage/gallery/{gallery_filename}.json"
                             with open(meta_file, "w", encoding="utf-8") as mf:
                                 json.dump({
