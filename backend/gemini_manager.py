@@ -95,4 +95,74 @@ Output HANYA JSON.
                 if self.current_index == start_index:
                     raise ValueError("Semua Gemini API Key gagal.")
 
+    def generate_prompt_from_image(self, image_base64: str, basic_title: str) -> dict:
+        self.load_keys()
+        if not self.keys:
+            raise ValueError("Tidak ada Gemini API Key yang disetting.")
+
+        # Clean base64 header if present (e.g., data:image/png;base64,...)
+        mime_type = "image/jpeg"
+        if "," in image_base64:
+            header, image_base64 = image_base64.split(",", 1)
+            if "png" in header: mime_type = "image/png"
+            elif "webp" in header: mime_type = "image/webp"
+
+        prompt_instruction = f"""
+Lihat gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
+Tugasmu adalah:
+1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
+2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
+3. Buat master prompt untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Pecah prompt menjadi 4 komponen:
+   - "subject": Deskripsi subjek utama (wajib diawali instruksi rasio 9:16).
+   - "detail": Detail bentuk/warna/pakaian.
+   - "background": Latar belakang atau lokasi yang estetik.
+   - "quality": Nuansa, pencahayaan, kualitas render (misal: 4k, photorealistic).
+
+Format HANYA JSON:
+{{
+    "seo_title": "Judul Pinterest",
+    "seo_desc": "Deskripsi Pinterest",
+    "subject": "...",
+    "detail": "...",
+    "background": "...",
+    "quality": "..."
+}}
+"""
+        start_index = self.current_index
+        while True:
+            key = self.get_current_key()
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={key}"
+            
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": prompt_instruction},
+                        {
+                            "inline_data": {
+                                "mime_type": mime_type,
+                                "data": image_base64
+                            }
+                        }
+                    ]
+                }]
+            }
+            
+            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+            
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    
+                    if text.startswith("```json"): text = text[7:]
+                    if text.endswith("```"): text = text[:-3]
+                    
+                    return json.loads(text.strip())
+            except Exception as e:
+                logger.error(f"Gemini API Error with key index {self.current_index}: {e}")
+                if not self.switch_key():
+                    raise ValueError("Semua Gemini API Key gagal.")
+                if self.current_index == start_index:
+                    raise ValueError("Semua Gemini API Key gagal.")
+
 manager = GeminiManager()

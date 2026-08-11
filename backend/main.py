@@ -156,6 +156,37 @@ async def api_generate_prompts(req: GeneratePromptRequest):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+class GenerateSeoPromptRequest(BaseModel):
+    imageBase64: str
+    basicTitle: str
+
+@app.post("/api/generate-seo-prompt")
+async def api_generate_seo_prompt(req: GenerateSeoPromptRequest):
+    from .gemini_manager import manager
+    import os, uuid, base64
+    try:
+        # Generate prompt from Gemini
+        result = manager.generate_prompt_from_image(req.imageBase64, req.basicTitle)
+        
+        # Save image to disk for Flow reference
+        uploads_dir = Path("storage/uploads")
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        filename = f"ref_{uuid.uuid4().hex[:8]}.jpg"
+        filepath = uploads_dir / filename
+        
+        # Clean base64 header
+        b64_data = req.imageBase64
+        if "," in b64_data:
+            b64_data = b64_data.split(",", 1)[1]
+            
+        with open(filepath, "wb") as f:
+            f.write(base64.b64decode(b64_data))
+            
+        result["reference_image"] = str(filepath.resolve())
+        return {"success": True, "data": result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 from .engine_loop import start_autopilot, stop_autopilot
 
 @app.post("/api/start-autopilot")

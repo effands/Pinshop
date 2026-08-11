@@ -33,7 +33,10 @@ function App() {
     subject: '',
     detail: '',
     background: '',
-    quality: ''
+    quality: '',
+    seoTitle: '',
+    seoDesc: '',
+    referenceImage: ''
   })
 
   useEffect(() => {
@@ -179,6 +182,37 @@ function App() {
     } catch(e) {
       showToast('Gagal mengontrol Autopilot', 'error')
     }
+  }
+
+  const generateSEO = async () => {
+    if (!manualImage) return showToast('Paste atau Pilih gambar referensi dulu!', 'error')
+    setIsGeneratingSEO(true)
+    try {
+      const res = await fetch(`${API_BASE}/generate-seo-prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: manualImage, basicTitle: manualBasicTitle })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setConfig(prev => ({
+          ...prev,
+          seoTitle: data.data.seo_title || '',
+          seoDesc: data.data.seo_desc || '',
+          subject: data.data.subject || '',
+          detail: data.data.detail || '',
+          background: data.data.background || '',
+          quality: data.data.quality || '',
+          referenceImage: data.data.reference_image || ''
+        }))
+        showToast('SEO & Master Prompt berhasil diracik!', 'success')
+      } else {
+        showToast('Gagal: ' + data.error, 'error')
+      }
+    } catch (e) {
+      showToast('Error koneksi ke API', 'error')
+    }
+    setIsGeneratingSEO(false)
   }
 
   const testGeminiKeys = async () => {
@@ -481,15 +515,48 @@ function App() {
         {activeTab === 'prompt' && (
           <div>
             <div className="panel" style={{border: '1px solid var(--primary)', background: 'var(--bg-app)'}}>
-              <div style={{display: 'flex', gap: '20px', alignItems: 'flex-end'}}>
-                <div className="form-group" style={{flex: 1, marginBottom: 0}}>
-                  <label style={{color: 'var(--primary)'}}>✨ AI Prompt Generator</label>
-                  <input type="text" className="form-control" value={nicheInput} onChange={e => setNicheInput(e.target.value)} placeholder="Ide dekorasi kamar estetik..." />
+              <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>✨ Image Reference to Master Prompt (SEO Optimized)</h3>
+              
+              <div style={{display: 'flex', gap: '20px'}}>
+                <div 
+                  style={{
+                    flex: '0 0 200px', 
+                    height: '200px', 
+                    border: '2px dashed var(--primary)', 
+                    borderRadius: '8px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    position: 'relative',
+                    overflow: 'hidden',
+                    backgroundColor: 'rgba(0,0,0,0.1)'
+                  }}
+                  onPaste={handleManualPaste}
+                >
+                  {manualImage ? (
+                    <img src={manualImage} alt="Reference" style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+                  ) : (
+                    <div style={{textAlign: 'center', padding: '10px', color: 'var(--text-muted)'}}>
+                      <UploadCloud size={32} style={{marginBottom: '8px', opacity: 0.5}} />
+                      <p style={{fontSize: '13px'}}>Paste (Ctrl+V) foto referensi di sini</p>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer'}} onChange={handleManualFile} />
                 </div>
-                <button className="btn btn-primary" style={{padding: '14px 24px'}} onClick={generatePromptsWithAI} disabled={isGenerating}>
-                  {isGenerating ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
-                  {isGenerating ? 'Meracik Prompt...' : 'Buat Master Prompt'}
-                </button>
+                
+                <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                  <div className="form-group" style={{marginBottom: 0}}>
+                    <label>Judul Dasar Produk/Referensi</label>
+                    <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Baju Tidur Wanita..." />
+                  </div>
+                  
+                  <div style={{marginTop: 'auto'}}>
+                    <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px'}} onClick={generateSEO} disabled={isGeneratingSEO}>
+                      {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
+                      {isGeneratingSEO ? 'Meracik SEO & Prompt...' : 'Generate SEO & Master Prompt'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -509,6 +576,18 @@ function App() {
               <div className="panel">
                 <h3 style={{color: 'var(--primary)'}}>Variasi 3 (Nuansa)</h3>
                 <textarea className="form-control" rows="5" value={config.quality} onChange={e => setConfig({...config, quality: e.target.value})}></textarea>
+              </div>
+            </div>
+
+            <div className="panel" style={{marginTop: '20px', borderLeft: '4px solid var(--primary)'}}>
+              <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>📌 Pinterest SEO Metadata</h3>
+              <div className="form-group">
+                <label>Judul SEO Pinterest</label>
+                <input type="text" className="form-control" value={config.seoTitle} onChange={e => setConfig({...config, seoTitle: e.target.value})} />
+              </div>
+              <div className="form-group" style={{marginBottom: 0}}>
+                <label>Deskripsi SEO Pinterest (dengan hashtag)</label>
+                <textarea className="form-control" rows="4" value={config.seoDesc} onChange={e => setConfig({...config, seoDesc: e.target.value})}></textarea>
               </div>
             </div>
 
