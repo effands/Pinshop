@@ -192,6 +192,70 @@ async def get_config():
                 pass
     return {}
 
+class QueueItem(BaseModel):
+    id: str
+    basicTitle: str
+    spintaxLinks: str
+    referenceImages: List[str]
+    status: str = "pending"
+
+@app.get("/api/queue")
+async def get_queue_list():
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    queue_list = config.get("queue", [])
+    return {"success": True, "queue": queue_list}
+
+@app.post("/api/queue")
+async def add_queue_item(item: QueueItem):
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    if "queue" not in config:
+        config["queue"] = []
+    config["queue"].append(item.dict())
+    with open(settings.SETTINGS_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+    return {"success": True}
+
+@app.delete("/api/queue/{item_id}")
+async def delete_queue_item(item_id: str):
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    if "queue" in config:
+        config["queue"] = [i for i in config["queue"] if i.get("id") != item_id]
+        with open(settings.SETTINGS_FILE, "w") as f:
+            json.dump(config, f, indent=4)
+    return {"success": True}
+
+@app.post("/api/queue/clear")
+async def clear_queue():
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    config["queue"] = []
+    with open(settings.SETTINGS_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+    return {"success": True}
+
 class GeminiTestRequest(BaseModel):
     apiKey: str
 

@@ -33,13 +33,52 @@ async def autopilot_loop(logger_func):
                 await asyncio.sleep(60)
                 continue
                 
-            # Process SEO Metadata if available
-            seo_title = config.get("seoTitle", "")
-            seo_desc = config.get("seoDesc", "")
-            reference_images = config.get("referenceImages", [])
+            # Check for pending queue items first
+            queue = config.get("queue", [])
+            active_queue_item = None
+            for idx, item in enumerate(queue):
+                if item.get("status") == "pending":
+                    active_queue_item = item
+                    break
 
-            # Get master prompt from UI config
-            raw_prompt = config.get("masterPrompt", "")
+            is_queue_mode = active_queue_item is not None
+
+            if is_queue_mode:
+                logger_func(f"\n[Queue] Memproses item antrean: {active_queue_item.get('basicTitle')} (ID: {active_queue_item.get('id')})")
+                
+                # Mark item as running
+                active_queue_item["status"] = "running"
+                with open(settings.SETTINGS_FILE, "w") as f:
+                    json.dump(config, f, indent=4)
+                
+                logger_func("> Menghubungi Gemini AI untuk meracik SEO & Prompt Spintax...")
+                from .gemini_manager import manager as gemini_manager
+                try:
+                    res = gemini_manager.generate_seo_and_prompt(
+                        active_queue_item.get("basicTitle", ""),
+                        active_queue_item.get("referenceImages", [])
+                    )
+                    seo_title = res.get("seo_title", "")
+                    seo_desc = res.get("seo_desc", "")
+                    raw_prompt = res.get("master_prompt", "")
+                    reference_images = active_queue_item.get("referenceImages", [])
+                    link = active_queue_item.get("spintaxLinks", "")
+                    logger_func("> Gemini sukses meracik data untuk antrean ini.")
+                except Exception as ge:
+                    logger_func(f"[Error] Gemini gagal memproses antrean: {ge}")
+                    active_queue_item["status"] = "failed"
+                    with open(settings.SETTINGS_FILE, "w") as f:
+                        json.dump(config, f, indent=4)
+                    await asyncio.sleep(10)
+                    continue
+            else:
+                # Manual Studio post mode
+                seo_title = config.get("seoTitle", "")
+                seo_desc = config.get("seoDesc", "")
+                reference_images = config.get("referenceImages", [])
+                raw_prompt = config.get("masterPrompt", "")
+                link = get_random_line(config.get("spintaxLinks", ""))
+
             import re
             # Clean Midjourney flags like --ar 9:16 or --v 6.0 from Google Flow prompt
             prompt = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', raw_prompt).strip()
@@ -50,11 +89,16 @@ async def autopilot_loop(logger_func):
             prompt = parse_spintax(prompt)
                 
             if not prompt or prompt.strip(".") == "":
-                logger_func("[Warning] Master Prompt masih kosong atau tidak valid! Harap isi/generate Master Prompt terlebih dahulu di tab Studio.")
-                await asyncio.sleep(15)
+                if is_queue_mode:
+                    logger_func("[Error] Hasil prompt dari Gemini kosong. Melewati antrean ini.")
+                    active_queue_item["status"] = "failed"
+                    with open(settings.SETTINGS_FILE, "w") as f:
+                        json.dump(config, f, indent=4)
+                else:
+                    logger_func("[Warning] Master Prompt masih kosong atau tidak valid! Harap isi/generate Master Prompt terlebih dahulu di tab Studio.")
+                    await asyncio.sleep(15)
                 continue
             
-            link = get_random_line(config.get("spintaxLinks", ""))
             media_type = config.get("mediaType", "image")
             
             logger_func(f"> Menyuntikkan Master Prompt: {prompt[:30]}...")
@@ -279,8 +323,24 @@ async def autopilot_loop(logger_func):
                         if not _running: break
                         await asyncio.sleep(1)
 
+            # If a queue item was processed, update its final status!
+            if is_queue_mode:
+                active_queue_item["status"] = "success" if upload_success else "failed"
+                try:
+                    if settings.SETTINGS_FILE.exists():
+                        with open(settings.SETTINGS_FILE, "r") as f:
+                            fresh_config = json.load(f)
+                        for i in fresh_config.get("queue", []):
+                            if i.get("id") == active_queue_item["id"]:
+                                i["status"] = active_queue_item["status"]
+                        with open(settings.SETTINGS_FILE, "w") as f:
+                            json.dump(fresh_config, f, indent=4)
+                    logger_func(f"[Queue] Status antrean diupdate: {active_queue_item['status'].upper()}")
+                except Exception as err:
+                    logger_func(f"[Warning] Gagal mengupdate status antrean: {err}")
+            
             # If a manual prompt was used, automatically stop autopilot after posting all generated variations
-            if raw_prompt:
+            if not is_queue_mode and raw_prompt:
                 logger_func("[System] Posting manual seluruh variasi selesai. Menghentikan Autopilot untuk mencegah duplikasi.")
                 _running = False
             else:
