@@ -747,17 +747,17 @@ function App() {
                 
                 {/* Form Inputs Grid - Sleek & Fully Responsive */}
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  display: 'flex',
+                  flexWrap: 'wrap',
                   gap: '16px',
                   alignItems: 'end'
                 }}>
-                  <div className="form-group" style={{margin: 0}}>
+                  <div className="form-group" style={{margin: 0, flex: '2 1 350px'}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Judul Dasar (Shopee dll)</label>
                     <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Meja Kerja Minimalis Gaya Industrial..." />
                   </div>
                   
-                  <div className="form-group" style={{margin: 0}}>
+                  <div className="form-group" style={{margin: 0, flex: '1 1 180px'}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Link Affiliate (Shopee/TikTok)</label>
                     <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
                   </div>
