@@ -7,6 +7,21 @@
   s.src = chrome.runtime.getURL('injected.js');
   s.onload = () => s.remove();
   (document.head || document.documentElement).appendChild(s);
+
+  function reportProjectId() {
+    const match = window.location.href.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if (match && match[0]) {
+      try {
+        chrome.runtime.sendMessage({
+          type: 'FLOW_PROJECT_DETECTED',
+          projectId: match[0]
+        }).catch(() => {});
+      } catch (_) {}
+    }
+  }
+
+  reportProjectId();
+  setInterval(reportProjectId, 2000);
 })();
 
 chrome.runtime.onMessage.addListener((msg, _, reply) => {

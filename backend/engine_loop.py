@@ -71,22 +71,26 @@ async def autopilot_loop(logger_func):
             import base64
             import os
             
-            instances = bridge.instance_snapshot()
-            active_inst = None
-            for inst in instances:
-                if inst.get("project_id") and inst.get("project_id") != "auto":
-                    active_inst = inst
-                    break
+            # Wait up to 10s for real project ID from Chrome extension
+            project_id = None
+            instance_name = "Chrome"
             
-            if active_inst:
-                project_id = active_inst.get("project_id")
-                instance_name = active_inst.get("name", "Chrome")
-            else:
-                project_id, instance_name = bridge.get_active_instance_info()
-                if not project_id or project_id == "auto":
-                    from omniflash.config import DEFAULT_PROJECT
-                    project_id = DEFAULT_PROJECT
-                    instance_name = "Default"
+            for _ in range(10):
+                instances = bridge.instance_snapshot()
+                for inst in instances:
+                    pid = inst.get("project_id")
+                    if pid and pid != "auto" and pid != "0143adf4-5864-4cb4-abb5-fe4254ad0dc7":
+                        project_id = pid
+                        instance_name = inst.get("name", "Chrome")
+                        break
+                if project_id:
+                    break
+                await asyncio.sleep(1)
+
+            if not project_id:
+                logger_func("[Warning] Project ID Google Flow belum terdeteksi! Pastikan tab project Google Flow terbuka di Chrome.")
+                await asyncio.sleep(10)
+                continue
             
             logger_func(f"> [Google Flow] Project ID: {project_id} | Instance: {instance_name}")
                 

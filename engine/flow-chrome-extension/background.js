@@ -946,6 +946,24 @@ chrome.runtime.onMessage.addListener((msg, _, reply) => {
     });
   }
 
+  if (msg.type === 'FLOW_PROJECT_DETECTED' && msg.projectId) {
+    if (currentProjectId !== msg.projectId) {
+      currentProjectId = msg.projectId;
+      chrome.storage.local.set({ currentProjectId });
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'extension_ready',
+          instanceId,
+          instanceName,
+          projectId: currentProjectId,
+          flowKeyPresent: !!flowKey,
+        }));
+      }
+    }
+    reply({ ok: true });
+    return true;
+  }
+
   if (msg.type === 'DISCONNECT') {
     manualDisconnect = true;
     if (ws) ws.close();
