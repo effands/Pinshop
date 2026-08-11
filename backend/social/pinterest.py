@@ -55,6 +55,21 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                 link_input = page.locator("input#WebsiteField, input[id*='WebsiteField'], input[placeholder*='Add a link'], input[placeholder*='tautan' i], input[placeholder*='link' i]").first
                 if await link_input.is_visible():
                     await link_input.fill(link)
+            # Select Pinterest Board
+            try:
+                board_btn = page.locator("[data-test-id='board-dropdown'], [data-test-id='board-selector'], button[aria-label*='Choose board'], button[aria-label*='Pilih papan'], div[aria-label*='Choose a board']").first
+                if await board_btn.is_visible():
+                    await board_btn.click()
+                    await page.wait_for_timeout(1500)
+                    
+                    # Click first board in list
+                    first_board = page.locator("[data-test-id='board-row'], div[role='option'], li[role='option'], div[data-test-id*='board']").first
+                    if await first_board.is_visible():
+                        await first_board.click()
+                        log("> Papan Pinterest (Board) berhasil dipilih.")
+            except Exception as e:
+                log(f"[Warning] Gagal memilih Papan: {e}")
+
             # Toggle AI disclosure label if available
             try:
                 ai_switch = page.locator("input[name*='ai-disclosure-switch'], [data-test-id='ai-disclosure-switch'] input, input#pin-creation-ai-disclosure-switch").first
