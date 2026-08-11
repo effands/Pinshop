@@ -61,7 +61,7 @@ async def upload_image(bridge, image_path: str, project_id: str = None) -> str |
     }
 
     log.info("Uploading image: %s", os.path.basename(image_path))
-    result = await bridge.api_request(ENDPOINTS["upload_image"], body)
+    result = await bridge.api_request(ENDPOINTS["upload_image"], body, captcha_action="")
 
     status = result.get("status", 0)
     data = result.get("data", {})

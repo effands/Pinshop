@@ -39,7 +39,12 @@ async def autopilot_loop(logger_func):
             reference_images = config.get("referenceImages", [])
 
             # Get master prompt from UI config
-            prompt = config.get("masterPrompt", "")
+            raw_prompt = config.get("masterPrompt", "")
+            import re
+            # Clean Midjourney flags like --ar 9:16 or --v 6.0 from Google Flow prompt
+            prompt = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', raw_prompt).strip()
+            if not prompt:
+                prompt = raw_prompt
             
             link = get_random_line(config.get("spintaxLinks", ""))
             media_type = config.get("mediaType", "image")
