@@ -2,6 +2,7 @@ import asyncio
 import random
 import time
 import json
+from pathlib import Path
 from . import settings
 from .spintax import get_random_line, generate_prompt
 from .social.pinterest import upload_to_pinterest

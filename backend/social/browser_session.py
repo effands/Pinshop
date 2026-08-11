@@ -562,9 +562,7 @@ async def login_account(platform: str, account: str = DEFAULT_ACCOUNT, target_ur
                         elif platform == "shopee":
                             cookies = await context.cookies("https://shopee.co.id")
                             if any(c.get("name") in {"SPC_EC", "shopee_token"} for c in cookies):
-                                username = await _try_extract_username(page)
-                                if username:
-                                    save_account_meta(platform, account, {"username": username})
+                                pass  # Successfully logged into shopee
                         elif platform == "chatgpt":
                             cookies = await context.cookies(["https://chatgpt.com", "https://openai.com"])
                             curr_url = page.url.lower()
