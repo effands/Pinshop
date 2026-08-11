@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart, AlertTriangle } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -52,6 +52,23 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [previewIndex, galleryFiles.length])
+
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    message: '',
+    onConfirm: null
+  })
+
+  const askConfirmation = (message, onConfirmAction) => {
+    setConfirmModal({
+      show: true,
+      message,
+      onConfirm: () => {
+        onConfirmAction()
+        setConfirmModal({ show: false, message: '', onConfirm: null })
+      }
+    })
+  }
 
   const [copiedField, setCopiedField] = useState(null)
   
@@ -106,41 +123,42 @@ function App() {
 
   const deleteSelectedGalleryItems = async () => {
     if (selectedGalleryItems.length === 0) return
-    if (!confirm(`Hapus ${selectedGalleryItems.length} item terpilih dari Gallery?`)) return
-    
-    try {
-      const res = await fetch(`${API_BASE}/gallery/delete-batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filenames: selectedGalleryItems })
-      })
-      const data = await res.json()
-      if (data.success) {
-        showToast(`${data.deleted} item berhasil dihapus`, 'success')
-        setSelectedGalleryItems([])
-        fetchGallery()
-      } else {
-        showToast('Gagal menghapus item', 'error')
+    askConfirmation(`Hapus ${selectedGalleryItems.length} item terpilih dari Gallery?`, async () => {
+      try {
+        const res = await fetch(`${API_BASE}/gallery/delete-batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filenames: selectedGalleryItems })
+        })
+        const data = await res.json()
+        if (data.success) {
+          showToast(`${data.deleted} item berhasil dihapus`, 'success')
+          setSelectedGalleryItems([])
+          fetchGallery()
+        } else {
+          showToast('Gagal menghapus item', 'error')
+        }
+      } catch (e) {
+        showToast('Error koneksi', 'error')
       }
-    } catch (e) {
-      showToast('Error koneksi', 'error')
-    }
+    })
   }
 
   const deleteGalleryItem = async (filename) => {
-    if (!confirm("Hapus file ini dari Gallery?")) return
-    try {
-      const res = await fetch(`${API_BASE}/gallery/${filename}`, { method: 'DELETE' })
-      const data = await res.json()
-      if (data.success) {
-        showToast("Item berhasil dihapus dari Gallery", "success")
-        fetchGallery()
-      } else {
-        showToast("Gagal menghapus item", "error")
+    askConfirmation("Hapus file ini dari Gallery?", async () => {
+      try {
+        const res = await fetch(`${API_BASE}/gallery/${filename}`, { method: 'DELETE' })
+        const data = await res.json()
+        if (data.success) {
+          showToast("Item berhasil dihapus dari Gallery", "success")
+          fetchGallery()
+        } else {
+          showToast("Gagal menghapus item", "error")
+        }
+      } catch (e) {
+        showToast("Error saat menghapus item", "error")
       }
-    } catch (e) {
-      showToast("Error saat menghapus item", "error")
-    }
+    })
   }
 
   const [queueItems, setQueueItems] = useState([])
@@ -222,17 +240,18 @@ function App() {
   }
 
   const clearQueue = async () => {
-    if (!confirm("Hapus seluruh isi antrean?")) return
-    try {
-      const res = await fetch(`${API_BASE}/queue/clear`, { method: 'POST' })
-      const data = await res.json()
-      if (data.success) {
-        showToast("Antrean berhasil dikosongkan", "success")
-        fetchQueue()
+    askConfirmation("Hapus seluruh isi antrean?", async () => {
+      try {
+        const res = await fetch(`${API_BASE}/queue/clear`, { method: 'POST' })
+        const data = await res.json()
+        if (data.success) {
+          showToast("Antrean berhasil dikosongkan", "success")
+          fetchQueue()
+        }
+      } catch (e) {
+        showToast("Gagal mengosongkan antrean", "error")
       }
-    } catch (e) {
-      showToast("Gagal mengosongkan antrean", "error")
-    }
+    })
   }
   const [manualImages, setManualImages] = useState([])
   const [manualBasicTitle, setManualBasicTitle] = useState('')
@@ -429,14 +448,15 @@ function App() {
   }
 
   const handleDeleteAccount = async (name) => {
-    if(!confirm(`Hapus akun ${name}?`)) return
-    try {
-      await fetch(`${API_BASE}/accounts/${name}`, { method: 'DELETE' })
-      showToast(`Akun ${name} dihapus.`, 'success')
-      fetchAccounts()
-    } catch(e) {
-      showToast('Gagal menghapus akun', 'error')
-    }
+    askConfirmation(`Hapus akun ${name}?`, async () => {
+      try {
+        await fetch(`${API_BASE}/accounts/${name}`, { method: 'DELETE' })
+        showToast(`Akun ${name} dihapus.`, 'success')
+        fetchAccounts()
+      } catch(e) {
+        showToast('Gagal menghapus akun', 'error')
+      }
+    })
   }
 
   const handleCheckAccount = async (name) => {
@@ -1699,6 +1719,74 @@ function App() {
           </div>
         );
       })()}
+
+      {/* Premium Confirm Modal */}
+      {confirmModal.show && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 20000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'var(--panel-bg)',
+            border: '1px solid var(--panel-border)',
+            borderRadius: '24px',
+            width: '420px',
+            padding: '30px',
+            textAlign: 'center',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            <div style={{
+              background: 'rgba(239, 35, 60, 0.1)',
+              borderRadius: '50%',
+              width: '64px',
+              height: '64px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--danger)'
+            }}>
+              <AlertTriangle size={32} />
+            </div>
+
+            <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+              <h3 style={{margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#fff'}}>Konfirmasi Tindakan</h3>
+              <p style={{margin: 0, fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5'}}>{confirmModal.message}</p>
+            </div>
+
+            <div style={{display: 'flex', gap: '12px', width: '100%', marginTop: '10px'}}>
+              <button 
+                type="button"
+                className="btn btn-outline" 
+                onClick={() => setConfirmModal({ show: false, message: '', onConfirm: null })}
+                style={{flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', borderColor: 'var(--panel-border)'}}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="btn btn-danger" 
+                onClick={confirmModal.onConfirm}
+                style={{flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold'}}
+              >
+                Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Container */}
       {toast.show && (
