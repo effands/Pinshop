@@ -108,7 +108,7 @@ Lihat {len(images_base64)} gambar produk/referensi ini dan judul dasarnya: "{bas
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
 2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
-3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
+3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (DILARANG menggunakan flag/parameter rasio seperti --ar 9:16 atau 9:16).
 
 Format HANYA JSON:
 {{
@@ -140,7 +140,7 @@ Berdasarkan judul dasar produk/topik ini: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
 2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
-3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
+3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (DILARANG menggunakan flag/parameter rasio seperti --ar 9:16 atau 9:16).
 
 Format HANYA JSON:
 {{
@@ -172,7 +172,14 @@ Format HANYA JSON:
                     if text.startswith("```json"): text = text[7:]
                     if text.endswith("```"): text = text[:-3]
                     
-                    return json.loads(text.strip())
+                    res = json.loads(text.strip())
+                    if "master_prompt" in res and isinstance(res["master_prompt"], str):
+                        import re
+                        # Strip --ar flags and 9:16 ratios
+                        cleaned = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', res["master_prompt"])
+                        cleaned = re.sub(r'\b9:16\b', '', cleaned)
+                        res["master_prompt"] = cleaned.strip()
+                    return res
             except Exception as e:
                 logger.error(f"Gemini API Error with key index {self.current_index}: {e}")
                 if not self.switch_key():
