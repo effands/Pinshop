@@ -677,103 +677,122 @@ function App() {
           <div>
             <div className="panel" style={{border: '1px solid var(--primary)', background: 'var(--bg-app)'}}>
               <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>✨ Image Reference to Master Prompt (SEO Optimized)</h3>
-              
-              <div style={{display: 'flex', gap: '20px'}}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+                {/* Drag and Drop / Paste Area - Now Full Width and Sleeker */}
                 <div 
                   style={{
-                    flex: '0 0 300px', 
-                    height: '200px', 
+                    width: '100%', 
+                    minHeight: '120px', 
                     border: '2px dashed var(--primary)', 
-                    borderRadius: '8px', 
+                    borderRadius: '12px', 
                     display: 'flex', 
                     flexDirection: 'column',
                     alignItems: 'center', 
                     justifyContent: 'center', 
                     position: 'relative',
                     overflow: 'hidden',
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    padding: manualImages.length > 0 ? '10px' : '0'
+                    backgroundColor: 'rgba(92, 102, 242, 0.05)',
+                    padding: '20px',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
                   }}
                   onPaste={handleManualPaste}
+                  onClick={() => document.getElementById('hiddenFileInput').click()}
                 >
                   {manualImages.length > 0 ? (
-                    <div style={{display: 'flex', gap: '8px', overflowX: 'auto', width: '100%', height: '100%', alignItems: 'center'}}>
+                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '12px', width: '100%', justifyContent: 'center', alignItems: 'center'}}>
                       {manualImages.map((img, idx) => (
-                        <div key={idx} style={{position: 'relative', height: '100%', flexShrink: 0}}>
-                          <img src={img} alt={`Ref ${idx}`} style={{height: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)'}} />
+                        <div key={idx} style={{position: 'relative', height: '90px', width: '90px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.15)'}}>
+                          <img src={img} alt={`Ref ${idx}`} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
                           <button 
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const newImgs = [...manualImages];
                               newImgs.splice(idx, 1);
                               setManualImages(newImgs);
                             }}
-                            style={{position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px'}}
+                            style={{position: 'absolute', top: '4px', right: '4px', background: 'rgba(239, 35, 60, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold'}}
                           >
                             ×
                           </button>
                         </div>
                       ))}
                       <div 
-                        onClick={() => document.getElementById('hiddenFileInput').click()} 
-                        style={{height: '100%', minWidth: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(255,255,255,0.3)', borderRadius: '4px', cursor: 'pointer', flexShrink: 0}}
+                        style={{
+                          height: '90px', 
+                          width: '90px', 
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          border: '2px dashed var(--primary)', 
+                          borderRadius: '8px', 
+                          cursor: 'pointer',
+                          backgroundColor: 'rgba(92, 102, 242, 0.1)',
+                          color: 'var(--primary)'
+                        }}
                         title="Tambah Foto"
                       >
-                        <UploadCloud size={20} opacity={0.6} />
+                        <UploadCloud size={24} />
+                        <span style={{fontSize: '10px', marginTop: '4px', fontWeight: '600'}}>Tambah</span>
                       </div>
                     </div>
                   ) : (
-                    <div 
-                      onClick={() => document.getElementById('hiddenFileInput').click()} 
-                      style={{textAlign: 'center', padding: '10px', color: 'var(--text-muted)', cursor: 'pointer', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
-                    >
-                      <UploadCloud size={32} style={{marginBottom: '8px', opacity: 0.5}} />
-                      <p style={{fontSize: '13px'}}>Klik atau Paste (Ctrl+V) banyak foto di sini</p>
+                    <div style={{textAlign: 'center', color: 'var(--text-muted)'}}>
+                      <UploadCloud size={40} style={{color: 'var(--primary)', marginBottom: '8px', opacity: 0.8}} />
+                      <p style={{fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px'}}>Klik untuk Unggah atau Paste (Ctrl+V) Gambar Referensi</p>
+                      <p style={{fontSize: '12px', opacity: 0.7}}>Mendukung banyak gambar produk sekaligus</p>
                     </div>
                   )}
                   <input id="hiddenFileInput" type="file" multiple accept="image/*" style={{display: 'none'}} onChange={handleManualFile} />
                 </div>
                 
-                <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px'}}>
-                  <div className="form-group" style={{marginBottom: 0}}>
-                    <label>Judul Dasar (Shopee dll)</label>
-                    <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Baju Tidur Wanita..." />
+                {/* Form Inputs Grid - Sleek & Fully Responsive */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: '16px',
+                  alignItems: 'end'
+                }}>
+                  <div className="form-group" style={{margin: 0}}>
+                    <label style={{fontWeight: '600', fontSize: '12px'}}>Judul Dasar (Shopee dll)</label>
+                    <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Meja Kerja Minimalis Gaya Industrial..." />
                   </div>
                   
-                  <div style={{display: 'flex', gap: '16px'}}>
-                    <div className="form-group" style={{flex: 2, marginBottom: 0}}>
-                      <label>Link Affiliate (Shopee/TikTok)</label>
-                      <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
-                    </div>
-
-                    <div className="form-group" style={{flex: 1, marginBottom: 0}}>
-                      <label>Jumlah Gambar (Google Flow)</label>
-                      <select 
-                        className="form-control" 
-                        value={config.generateCount || 1} 
-                        onChange={e => {
-                          const val = parseInt(e.target.value);
-                          setConfig({...config, generateCount: val});
-                          fetch(`${API_BASE}/api/save-config`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({...config, generateCount: val})
-                          });
-                        }}
-                      >
-                        <option value={1}>1 Gambar (1x)</option>
-                        <option value={2}>2 Gambar (2x)</option>
-                        <option value={3}>3 Gambar (3x)</option>
-                        <option value={4}>4 Gambar (4x)</option>
-                      </select>
-                    </div>
+                  <div className="form-group" style={{margin: 0}}>
+                    <label style={{fontWeight: '600', fontSize: '12px'}}>Link Affiliate (Shopee/TikTok)</label>
+                    <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
                   </div>
 
-                  <div style={{marginTop: 'auto'}}>
-                    <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px'}} onClick={generateSEO} disabled={isGeneratingSEO}>
-                      {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
-                      {isGeneratingSEO ? 'Meracik SEO & Prompt...' : 'Generate SEO & Master Prompt'}
-                    </button>
+                  <div className="form-group" style={{margin: 0}}>
+                    <label style={{fontWeight: '600', fontSize: '12px'}}>Jumlah Gambar (Google Flow)</label>
+                    <select 
+                      className="form-control" 
+                      value={config.generateCount || 1} 
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        setConfig({...config, generateCount: val});
+                        fetch(`${API_BASE}/api/save-config`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({...config, generateCount: val})
+                        });
+                      }}
+                    >
+                      <option value={1}>1 Gambar (1x)</option>
+                      <option value={2}>2 Gambar (2x)</option>
+                      <option value={3}>3 Gambar (3x)</option>
+                      <option value={4}>4 Gambar (4x)</option>
+                    </select>
                   </div>
+                </div>
+
+                {/* Generate Button Container */}
+                <div style={{marginTop: '8px'}}>
+                  <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px', fontSize: '15px', fontWeight: 'bold'}} onClick={generateSEO} disabled={isGeneratingSEO}>
+                    {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
+                    {isGeneratingSEO ? 'Sedang Meracik SEO & Prompt Spintax...' : 'Generate SEO & Master Prompt'}
+                  </button>
                 </div>
               </div>
             </div>
