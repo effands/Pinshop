@@ -159,18 +159,7 @@ async def autopilot_loop(logger_func):
                     logger_func("[Error] Gagal merender video dari Flow.")
                     await asyncio.sleep(30)
                     continue
-                    
-                video_id = results[0]
-                result_path = "storage/generated.mp4"
-                await download_video(bridge, video_id, result_path)
-                # Copy to gallery
-                try:
-                    import shutil
-                    os.makedirs("storage/gallery", exist_ok=True)
-                    gallery_filename = f"gallery_{int(time.time())}.mp4"
-                    shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
-                except Exception as e:
-                    logger_func(f"[Warning] Gagal menyalin video ke gallery: {e}")
+                media_files = [{"type": "video", "item": results[0]}]
             else:
                 generate_count = int(config.get("generateCount", 1))
                 logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI ({generate_count}x)...")
@@ -181,83 +170,112 @@ async def autopilot_loop(logger_func):
                     logger_func("[Error] Gagal merender gambar dari Flow.")
                     await asyncio.sleep(30)
                     continue
-                    
                 logger_func("> Gambar berhasil dirender oleh Google Flow!")
-                first_item = results[0]
-                image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
-                result_path = "storage/generated.png"
-                logger_func("> Mengunduh file gambar HD ke disk...")
-                dl_ok = await download_image(bridge, image_url, result_path)
-                if not dl_ok:
-                    logger_func("[Warning] Gagal mengunduh gambar hasil render.")
-                else:
-                    logger_func("> File Foto HD berhasil didownload.")
-                    # Copy to gallery
-                    try:
-                        import shutil
-                        os.makedirs("storage/gallery", exist_ok=True)
-                        gallery_filename = f"gallery_{int(time.time())}.png"
-                        shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
-                    except Exception as e:
-                        logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
-            
+                media_files = [{"type": "image", "item": r} for r in results]
+
             # Target Account
             account_name = config.get("targetAccount")
             if not account_name:
                 logger_func("[Error] Tidak ada akun target Pinterest yang dipilih.")
                 await asyncio.sleep(30)
                 continue
-                
-            logger_func(f"> Menyiapkan posting Pinterest untuk akun [{account_name}]...")
-            
-            # Use SEO Data if present, otherwise fallback to auto-extract or random
-            from .spintax import resolve_shopee_title
-            product_name = resolve_shopee_title(link) if link else ""
 
-            if seo_title:
-                pin_title = seo_title
-            elif product_name and product_name != "Rekomendasi Produk Estetik":
-                pin_title = product_name
-            else:
-                pin_title = "Beautiful " + prompt.split(" ")[0] if prompt else "Aesthetic Pin"
-            
-            if seo_desc:
-                pin_desc = seo_desc
-            else:
-                pin_desc = f"{pin_title}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
-
-            from .spintax import parse_spintax
-            pin_title = parse_spintax(pin_title)
-            pin_desc = parse_spintax(pin_desc)
-
-            from .social.pinterest import upload_to_pinterest
-            upload_success = await upload_to_pinterest(
-                image_path=result_path,
-                title=pin_title[:99],
-                description=pin_desc[:499],
-                link=link,
-                account_name=account_name,
-                logger_func=logger_func
-            )
-            
-            if upload_success:
-                logger_func(f"✅ PIN BERHASIL DIPOSTING: [{account_name}] {pin_title[:30]}...")
-                # If a manual prompt was used, automatically stop autopilot to prevent duplicate posts
-                if raw_prompt:
-                    logger_func("[System] Posting manual berhasil diselesaikan. Menghentikan Autopilot untuk mencegah duplikasi.")
-                    _running = False
-            else:
-                logger_func(f"❌ PIN GAGAL: [{account_name}]")
-                
-            sleep_time = int(config.get("sleepInterval", 10))
-            if sleep_time >= 60:
-                logger_func(f"> Sleep Engine: Beristirahat {sleep_time//60} menit (Anti-Ban) ...")
-            else:
-                logger_func(f"> Sleep Engine: Beristirahat {sleep_time} detik (Anti-Ban) ...")
-            
-            for _ in range(sleep_time):
+            for idx, media_file in enumerate(media_files):
                 if not _running: break
-                await asyncio.sleep(1)
+                
+                # 1. Download & Save to Gallery
+                if media_file["type"] == "video":
+                    video_id = media_file["item"]
+                    result_path = "storage/generated.mp4"
+                    await download_video(bridge, video_id, result_path)
+                    try:
+                        import shutil
+                        os.makedirs("storage/gallery", exist_ok=True)
+                        gallery_filename = f"gallery_{int(time.time())}.mp4"
+                        shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                    except Exception as e:
+                        logger_func(f"[Warning] Gagal menyalin video ke gallery: {e}")
+                else:
+                    first_item = media_file["item"]
+                    image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
+                    result_path = "storage/generated.png"
+                    logger_func(f"> Mengunduh file gambar HD ke-{idx+1} ke disk...")
+                    dl_ok = await download_image(bridge, image_url, result_path)
+                    if not dl_ok:
+                        logger_func(f"[Warning] Gagal mengunduh gambar ke-{idx+1}.")
+                        continue
+                    else:
+                        logger_func(f"> File Foto HD ke-{idx+1} berhasil didownload.")
+                        try:
+                            import shutil
+                            os.makedirs("storage/gallery", exist_ok=True)
+                            gallery_filename = f"gallery_{int(time.time())}_{idx}.png"
+                            shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                        except Exception as e:
+                            logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
+
+                # 2. Prepare Pinterest Title and Description (with Spintax)
+                logger_func(f"> Menyiapkan posting Pinterest ({idx+1}/{len(media_files)}) untuk akun [{account_name}]...")
+                from .spintax import resolve_shopee_title, parse_spintax
+                product_name = resolve_shopee_title(link) if link else ""
+
+                if seo_title:
+                    pin_title = seo_title
+                elif product_name and product_name != "Rekomendasi Produk Estetik":
+                    pin_title = product_name
+                else:
+                    pin_title = "Beautiful " + prompt.split(" ")[0] if prompt else "Aesthetic Pin"
+
+                if seo_desc:
+                    pin_desc = seo_desc
+                else:
+                    pin_desc = f"{pin_title}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
+
+                # Parse Spintax fresh for each post!
+                pin_title = parse_spintax(pin_title)
+                pin_desc = parse_spintax(pin_desc)
+
+                # 3. Post to Pinterest
+                from .social.pinterest import upload_to_pinterest
+                upload_success = await upload_to_pinterest(
+                    image_path=result_path,
+                    title=pin_title[:99],
+                    description=pin_desc[:499],
+                    link=link,
+                    account_name=account_name,
+                    logger_func=logger_func
+                )
+
+                if upload_success:
+                    logger_func(f"✅ PIN BERHASIL DIPOSTING ({idx+1}/{len(media_files)}): [{account_name}] {pin_title[:30]}...")
+                else:
+                    logger_func(f"❌ PIN GAGAL ({idx+1}/{len(media_files)}): [{account_name}]")
+
+                # 4. Sleep interval between multiple posts
+                if idx < len(media_files) - 1:
+                    sleep_time = int(config.get("sleepInterval", 10))
+                    if sleep_time >= 60:
+                        logger_func(f"> Sleep Jeda: Beristirahat {sleep_time//60} menit sebelum posting berikutnya...")
+                    else:
+                        logger_func(f"> Sleep Jeda: Beristirahat {sleep_time} detik sebelum posting berikutnya...")
+                    for _ in range(sleep_time):
+                        if not _running: break
+                        await asyncio.sleep(1)
+
+            # If a manual prompt was used, automatically stop autopilot after posting all generated variations
+            if raw_prompt:
+                logger_func("[System] Posting manual seluruh variasi selesai. Menghentikan Autopilot untuk mencegah duplikasi.")
+                _running = False
+            else:
+                # Regular schedule sleep
+                sleep_time = int(config.get("sleepInterval", 10))
+                if sleep_time >= 60:
+                    logger_func(f"> Sleep Engine: Beristirahat {sleep_time//60} menit (Anti-Ban) ...")
+                else:
+                    logger_func(f"> Sleep Engine: Beristirahat {sleep_time} detik (Anti-Ban) ...")
+                for _ in range(sleep_time):
+                    if not _running: break
+                    await asyncio.sleep(1)
                 
         except Exception as e:
             logger_func(f"[Error] Autopilot Loop: {e}")
