@@ -1175,7 +1175,7 @@ function App() {
                   <span>📋</span> Antrean Posting Massal ({queueItems.length} Produk)
                 </h3>
                 {queueItems.length > 0 && (
-                  <button className="btn btn-outline" style={{borderColor: 'var(--danger)', color: 'var(--danger)', padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
+                  <button className="btn btn-action-delete" style={{padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
                     Kosongkan Antrean
                   </button>
                 )}
