@@ -63,6 +63,16 @@ def send_log(message: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Setup
+    print("\n\033[96m") # Cyan color
+    print("    ___    __________________    ________  ___ ")
+    print("   /   |  / ____/ ____/  _/ /   /  _/ __ |/   |")
+    print("  / /| | / /_  / /_   / // /    / // /_/ / /| |")
+    print(" / ___ |/ __/ / __/ _/ // /____/ // __  / ___ |")
+    print("/_/  |_/_/   /_/   /___/_____/___/_/ |_/_/  |_|")
+    print("\033[0m")
+    print("====================================================")
+    print("       PINSHOP EDITION - AUTO PINTEREST PIN")
+    print("====================================================\n")
     send_log("[System] PinShop Engine Starting...")
     try:
         await init_bridge()
