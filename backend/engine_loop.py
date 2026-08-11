@@ -35,21 +35,17 @@ async def autopilot_loop(logger_func):
             # Process SEO Metadata if available
             seo_title = config.get("seoTitle", "")
             seo_desc = config.get("seoDesc", "")
-            reference_image = config.get("referenceImage", "")
+            reference_images = config.get("referenceImages", [])
 
-            prompt = generate_prompt(
-                config.get("subject", ""),
-                config.get("detail", ""),
-                config.get("background", ""),
-                config.get("quality", "")
-            )
+            # Get master prompt from UI config
+            prompt = config.get("masterPrompt", "")
             
             link = get_random_line(config.get("spintaxLinks", ""))
             media_type = config.get("mediaType", "image")
             
-            logger_func(f"> Menyuntikkan Prompt: {prompt[:30]}...")
-            if reference_image:
-                logger_func(f"> Menggunakan Gambar Referensi: {Path(reference_image).name}")
+            logger_func(f"> Menyuntikkan Master Prompt: {prompt[:30]}...")
+            if reference_images and len(reference_images) > 0:
+                logger_func(f"> Menggunakan {len(reference_images)} Gambar Referensi")
             
             if media_type == "video":
                 logger_func("> Merender mahakarya VIDEO AI. Sistem standby...")
@@ -72,8 +68,8 @@ async def autopilot_loop(logger_func):
                 result_path = str(Path("frontend/public/logo.png").resolve()) 
             else:
                 logger_func("> Menunggu flow merender gambar...")
-                # Note: Currently bridge.generate_media only takes prompt, image-to-image to be added in Flow later
-                success = await bridge.generate_media("image", prompt)
+                # Note: Currently bridge.generate_media passes prompt and images to extension
+                success = await bridge.generate_media("image", prompt, reference_images)
                 if not success:
                     logger_func("[Error] Gagal generate dari Flow. Retry nanti.")
                     await asyncio.sleep(30)
@@ -124,10 +120,11 @@ async def autopilot_loop(logger_func):
             if upload_success:
                 logger_func(f"✅ PIN BERHASIL: [{account_name}] {pin_title[:30]}...")
                 # Clear SEO data from config after successful pin
-                if seo_title or seo_desc or reference_image:
+                if seo_title or seo_desc or (reference_images and len(reference_images) > 0) or prompt:
                     config["seoTitle"] = ""
                     config["seoDesc"] = ""
-                    config["referenceImage"] = ""
+                    config["masterPrompt"] = ""
+                    config["referenceImages"] = []
                     with open(settings.SETTINGS_FILE, "w") as f:
                         json.dump(config, f, indent=4)
             else:

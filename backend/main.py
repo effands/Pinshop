@@ -167,7 +167,7 @@ async def api_generate_prompts(req: GeneratePromptRequest):
         return {"success": False, "error": str(e)}
 
 class GenerateSeoPromptRequest(BaseModel):
-    imageBase64: str = ""
+    imagesBase64: list[str] = []
     basicTitle: str
 
 @app.post("/api/generate-seo-prompt")
@@ -176,26 +176,28 @@ async def api_generate_seo_prompt(req: GenerateSeoPromptRequest):
     import os, uuid, base64
     try:
         # Generate prompt from Gemini
-        result = manager.generate_prompt_from_image(req.imageBase64, req.basicTitle)
+        result = manager.generate_prompt_from_image(req.imagesBase64, req.basicTitle)
         
-        # Save image to disk for Flow reference only if image is provided
-        if req.imageBase64:
-            uploads_dir = Path("storage/uploads")
-            uploads_dir.mkdir(parents=True, exist_ok=True)
-            filename = f"ref_{uuid.uuid4().hex[:8]}.jpg"
-            filepath = uploads_dir / filename
-            
-            # Clean base64 header
-            b64_data = req.imageBase64
-            if "," in b64_data:
-                b64_data = b64_data.split(",", 1)[1]
+        saved_images = []
+        uploads_dir = Path("storage/uploads")
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+
+        for b64_str in req.imagesBase64:
+            if b64_str:
+                filename = f"ref_{uuid.uuid4().hex[:8]}.jpg"
+                filepath = uploads_dir / filename
                 
-            with open(filepath, "wb") as f:
-                f.write(base64.b64decode(b64_data))
+                # Clean base64 header
+                b64_data = b64_str
+                if "," in b64_data:
+                    b64_data = b64_data.split(",", 1)[1]
+                    
+                with open(filepath, "wb") as f:
+                    f.write(base64.b64decode(b64_data))
+                    
+                saved_images.append(str(filepath.resolve()))
                 
-            result["reference_image"] = str(filepath.resolve())
-        else:
-            result["reference_image"] = ""
+        result["reference_images"] = saved_images
             
         return {"success": True, "data": result}
     except Exception as e:

@@ -95,71 +95,58 @@ Output HANYA JSON.
                 if self.current_index == start_index:
                     raise ValueError("Semua Gemini API Key gagal.")
 
-    def generate_prompt_from_image(self, image_base64: str, basic_title: str) -> dict:
+    def generate_prompt_from_image(self, images_base64: list[str], basic_title: str) -> dict:
         self.load_keys()
         if not self.keys:
             raise ValueError("Tidak ada Gemini API Key yang disetting.")
 
         parts = []
         
-        if image_base64:
-            # Clean base64 header if present (e.g., data:image/png;base64,...)
-            mime_type = "image/jpeg"
-            if "," in image_base64:
-                header, image_base64 = image_base64.split(",", 1)
-                if "png" in header: mime_type = "image/png"
-                elif "webp" in header: mime_type = "image/webp"
-            
+        if images_base64 and len(images_base64) > 0:
             prompt_instruction = f"""
-Lihat gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
+Lihat {len(images_base64)} gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
 2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
-3. Buat master prompt untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Pecah prompt menjadi 4 komponen:
-   - "subject": Deskripsi subjek utama (wajib diawali instruksi rasio 9:16).
-   - "detail": Detail bentuk/warna/pakaian.
-   - "background": Latar belakang atau lokasi yang estetik.
-   - "quality": Nuansa, pencahayaan, kualitas render (misal: 4k, photorealistic).
+3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
 
 Format HANYA JSON:
 {{
     "seo_title": "Judul Pinterest",
     "seo_desc": "Deskripsi Pinterest",
-    "subject": "...",
-    "detail": "...",
-    "background": "...",
-    "quality": "..."
+    "master_prompt": "..."
 }}
 """
-            parts = [
-                {"text": prompt_instruction},
-                {
+            parts.append({"text": prompt_instruction})
+            
+            for img_b64 in images_base64:
+                if not img_b64: continue
+                # Clean base64 header if present
+                mime_type = "image/jpeg"
+                if "," in img_b64:
+                    header, img_b64 = img_b64.split(",", 1)
+                    if "png" in header: mime_type = "image/png"
+                    elif "webp" in header: mime_type = "image/webp"
+                
+                parts.append({
                     "inline_data": {
                         "mime_type": mime_type,
-                        "data": image_base64
+                        "data": img_b64
                     }
-                }
-            ]
+                })
         else:
             prompt_instruction = f"""
 Berdasarkan judul dasar produk/topik ini: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
 2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
-3. Buat master prompt untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Pecah prompt menjadi 4 komponen:
-   - "subject": Deskripsi subjek utama (wajib diawali instruksi rasio 9:16).
-   - "detail": Detail bentuk/warna/pakaian.
-   - "background": Latar belakang atau lokasi yang estetik.
-   - "quality": Nuansa, pencahayaan, kualitas render (misal: 4k, photorealistic).
+3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
 
 Format HANYA JSON:
 {{
     "seo_title": "Judul Pinterest",
     "seo_desc": "Deskripsi Pinterest",
-    "subject": "...",
-    "detail": "...",
-    "background": "...",
-    "quality": "..."
+    "master_prompt": "..."
 }}
 """
             parts = [{"text": prompt_instruction}]

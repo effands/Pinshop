@@ -23,7 +23,7 @@ function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 4000)
   }
   
-  const [manualImage, setManualImage] = useState(null)
+  const [manualImages, setManualImages] = useState([])
   const [manualBasicTitle, setManualBasicTitle] = useState('')
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false)
 
@@ -33,19 +33,19 @@ function App() {
       if (items[i].type.indexOf('image') !== -1) {
         const blob = items[i].getAsFile()
         const reader = new FileReader()
-        reader.onload = (event) => setManualImage(event.target.result)
+        reader.onload = (event) => setManualImages(prev => [...prev, event.target.result])
         reader.readAsDataURL(blob)
       }
     }
   }
 
   const handleManualFile = (e) => {
-    const file = e.target.files[0]
-    if (file) {
+    const files = Array.from(e.target.files)
+    files.forEach(file => {
       const reader = new FileReader()
-      reader.onload = (event) => setManualImage(event.target.result)
+      reader.onload = (event) => setManualImages(prev => [...prev, event.target.result])
       reader.readAsDataURL(file)
-    }
+    })
   }
   
   const [config, setConfig] = useState({
@@ -55,13 +55,10 @@ function App() {
     mediaType: 'image',
     spintaxLinks: '',
     geminiApiKeys: '',
-    subject: '',
-    detail: '',
-    background: '',
-    quality: '',
+    masterPrompt: '',
     seoTitle: '',
     seoDesc: '',
-    referenceImage: ''
+    referenceImages: []
   })
 
   useEffect(() => {
@@ -216,7 +213,7 @@ function App() {
       const res = await fetch(`${API_BASE}/generate-seo-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: manualImage || '', basicTitle: manualBasicTitle })
+        body: JSON.stringify({ imagesBase64: manualImages, basicTitle: manualBasicTitle })
       })
       const data = await res.json()
       if (data.success) {
@@ -224,11 +221,8 @@ function App() {
           ...prev,
           seoTitle: data.data.seo_title || '',
           seoDesc: data.data.seo_desc || '',
-          subject: data.data.subject || '',
-          detail: data.data.detail || '',
-          background: data.data.background || '',
-          quality: data.data.quality || '',
-          referenceImage: data.data.reference_image || ''
+          masterPrompt: data.data.master_prompt || '',
+          referenceImages: data.data.reference_images || []
         }))
         showToast('SEO & Master Prompt berhasil diracik!', 'success')
       } else {
@@ -545,7 +539,7 @@ function App() {
               <div style={{display: 'flex', gap: '20px'}}>
                 <div 
                   style={{
-                    flex: '0 0 200px', 
+                    flex: '0 0 300px', 
                     height: '200px', 
                     border: '2px dashed var(--primary)', 
                     borderRadius: '8px', 
@@ -554,27 +548,37 @@ function App() {
                     justifyContent: 'center', 
                     position: 'relative',
                     overflow: 'hidden',
-                    backgroundColor: 'rgba(0,0,0,0.1)'
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    padding: manualImages.length > 0 ? '10px' : '0'
                   }}
                   onPaste={handleManualPaste}
                 >
-                  {manualImage ? (
-                    <img src={manualImage} alt="Reference" style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+                  {manualImages.length > 0 ? (
+                    <div style={{display: 'flex', gap: '8px', overflowX: 'auto', width: '100%', height: '100%', alignItems: 'center'}}>
+                      {manualImages.map((img, idx) => (
+                        <img key={idx} src={img} alt={`Ref ${idx}`} style={{height: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)'}} />
+                      ))}
+                    </div>
                   ) : (
                     <div style={{textAlign: 'center', padding: '10px', color: 'var(--text-muted)'}}>
                       <UploadCloud size={32} style={{marginBottom: '8px', opacity: 0.5}} />
-                      <p style={{fontSize: '13px'}}>Paste (Ctrl+V) foto referensi di sini</p>
+                      <p style={{fontSize: '13px'}}>Paste (Ctrl+V) / Pilih banyak foto referensi</p>
                     </div>
                   )}
-                  <input type="file" accept="image/*" style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer'}} onChange={handleManualFile} />
+                  <input type="file" multiple accept="image/*" style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer'}} onChange={handleManualFile} />
                 </div>
                 
                 <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px'}}>
                   <div className="form-group" style={{marginBottom: 0}}>
-                    <label>Judul Dasar Produk/Referensi</label>
+                    <label>Judul Dasar (Shopee dll)</label>
                     <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Baju Tidur Wanita..." />
                   </div>
                   
+                  <div className="form-group" style={{marginBottom: 0}}>
+                    <label>Link Affiliate (Shopee/TikTok)</label>
+                    <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
+                  </div>
+
                   <div style={{marginTop: 'auto'}}>
                     <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px'}} onClick={generateSEO} disabled={isGeneratingSEO}>
                       {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
@@ -585,23 +589,9 @@ function App() {
               </div>
             </div>
 
-            <div className="grid-2">
-              <div className="panel">
-                <h3 style={{color: 'var(--primary)'}}>Subjek Utama</h3>
-                <textarea className="form-control" rows="5" value={config.subject} onChange={e => setConfig({...config, subject: e.target.value})}></textarea>
-              </div>
-              <div className="panel">
-                <h3 style={{color: 'var(--primary)'}}>Variasi 1 (Detail)</h3>
-                <textarea className="form-control" rows="5" value={config.detail} onChange={e => setConfig({...config, detail: e.target.value})}></textarea>
-              </div>
-              <div className="panel">
-                <h3 style={{color: 'var(--primary)'}}>Variasi 2 (Latar)</h3>
-                <textarea className="form-control" rows="5" value={config.background} onChange={e => setConfig({...config, background: e.target.value})}></textarea>
-              </div>
-              <div className="panel">
-                <h3 style={{color: 'var(--primary)'}}>Variasi 3 (Nuansa)</h3>
-                <textarea className="form-control" rows="5" value={config.quality} onChange={e => setConfig({...config, quality: e.target.value})}></textarea>
-              </div>
+            <div className="panel" style={{marginTop: '20px'}}>
+              <h3 style={{color: 'var(--primary)'}}>AI Master Prompt (Kirim ke Flow)</h3>
+              <textarea className="form-control" rows="8" value={config.masterPrompt} onChange={e => setConfig({...config, masterPrompt: e.target.value})} placeholder="Master prompt utuh dari AI..."></textarea>
             </div>
 
             <div className="panel" style={{marginTop: '20px', borderLeft: '4px solid var(--primary)'}}>
