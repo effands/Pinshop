@@ -206,9 +206,9 @@ async def autopilot_loop(logger_func):
             
             image_ratio_map = {
                 "16:9": "landscape",
-                "4:3": "4x3",
+                "4:3": "square",
                 "1:1": "square",
-                "3:4": "3x4",
+                "3:4": "portrait",
                 "9:16": "portrait"
             }
             selected_image_ratio = image_ratio_map.get(config.get("imageRatio", "9:16"), "portrait")
