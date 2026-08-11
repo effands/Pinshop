@@ -219,14 +219,10 @@ async def autopilot_loop(logger_func):
             
             if upload_success:
                 logger_func(f"✅ PIN BERHASIL DIPOSTING: [{account_name}] {pin_title[:30]}...")
-                # Clear SEO data from config after successful pin
-                if seo_title or seo_desc or (reference_images and len(reference_images) > 0) or prompt:
-                    config["seoTitle"] = ""
-                    config["seoDesc"] = ""
-                    config["masterPrompt"] = ""
-                    config["referenceImages"] = []
-                    with open(settings.SETTINGS_FILE, "w") as f:
-                        json.dump(config, f, indent=4)
+                # If a manual prompt was used, automatically stop autopilot to prevent duplicate posts
+                if raw_prompt:
+                    logger_func("[System] Posting manual berhasil diselesaikan. Menghentikan Autopilot untuk mencegah duplikasi.")
+                    _running = False
             else:
                 logger_func(f"❌ PIN GAGAL: [{account_name}]")
                 
