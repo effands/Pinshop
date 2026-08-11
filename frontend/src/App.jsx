@@ -616,7 +616,8 @@ function App() {
                     {accountsList.filter(a => a.status === 'valid').map((acc, i) => (
                       <option key={i} value={acc.name}>{acc.name} (Valid)</option>
                     ))}
-                 </div>
+                  </select>
+                </div>
                  
                  <div className="form-group" style={{flex: '1 1 180px'}}>
                    <label>Browser Pinterest</label>
