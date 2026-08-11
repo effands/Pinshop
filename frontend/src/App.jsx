@@ -154,6 +154,38 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (activeTab !== 'prompt') return
+
+    const handleGlobalPaste = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        return
+      }
+      const items = e.clipboardData?.items
+      if (!items) return
+      let hasImage = false
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          hasImage = true
+          const blob = items[i].getAsFile()
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            setManualImages(prev => [...prev, event.target.result])
+          }
+          reader.readAsDataURL(blob)
+        }
+      }
+      if (hasImage) {
+        showToast('Gambar referensi berhasil ditempel!', 'success')
+      }
+    }
+
+    window.addEventListener('paste', handleGlobalPaste)
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste)
+    }
+  }, [activeTab])
+
   const logsEndRef = useRef(null)
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
