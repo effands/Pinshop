@@ -276,36 +276,55 @@ async def autopilot_loop(logger_func):
             for idx, media_file in enumerate(media_files):
                 if not _running: break
                 
-                # 1. Download & Save to Gallery
-                if media_file["type"] == "video":
-                    video_id = media_file["item"]
-                    result_path = "storage/generated.mp4"
-                    await download_video(bridge, video_id, result_path)
-                    try:
-                        import shutil
-                        os.makedirs("storage/gallery", exist_ok=True)
-                        gallery_filename = f"gallery_{int(time.time())}.mp4"
-                        shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
-                    except Exception as e:
-                        logger_func(f"[Warning] Gagal menyalin video ke gallery: {e}")
-                else:
-                    first_item = media_file["item"]
-                    image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
-                    result_path = "storage/generated.png"
-                    logger_func(f"> Mengunduh file gambar HD ke-{idx+1} ke disk...")
-                    dl_ok = await download_image(bridge, image_url, result_path)
-                    if not dl_ok:
-                        logger_func(f"[Warning] Gagal mengunduh gambar ke-{idx+1}.")
-                        continue
-                    else:
-                        logger_func(f"> File Foto HD ke-{idx+1} berhasil didownload.")
-                        try:
-                            import shutil
-                            os.makedirs("storage/gallery", exist_ok=True)
-                            gallery_filename = f"gallery_{int(time.time())}_{idx}.png"
-                            shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
-                        except Exception as e:
-                            logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
+                 # 1. Download & Save to Gallery
+                 gallery_filename = None
+                 if media_file["type"] == "video":
+                     video_id = media_file["item"]
+                     result_path = "storage/generated.mp4"
+                     await download_video(bridge, video_id, result_path)
+                     try:
+                         import shutil
+                         os.makedirs("storage/gallery", exist_ok=True)
+                         gallery_filename = f"gallery_{int(time.time())}.mp4"
+                         shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                     except Exception as e:
+                         logger_func(f"[Warning] Gagal menyalin video ke gallery: {e}")
+                 else:
+                     first_item = media_file["item"]
+                     image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
+                     result_path = "storage/generated.png"
+                     logger_func(f"> Mengunduh file gambar HD ke-{idx+1} ke disk...")
+                     dl_ok = await download_image(bridge, image_url, result_path)
+                     if not dl_ok:
+                         logger_func(f"[Warning] Gagal mengunduh gambar ke-{idx+1}.")
+                         continue
+                     else:
+                         logger_func(f"> File Foto HD ke-{idx+1} berhasil didownload.")
+                         try:
+                             import shutil
+                             os.makedirs("storage/gallery", exist_ok=True)
+                             gallery_filename = f"gallery_{int(time.time())}_{idx}.png"
+                             shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
+                         except Exception as e:
+                             logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
+
+                 if gallery_filename:
+                     try:
+                         import json
+                         meta_file = f"storage/gallery/{gallery_filename}.json"
+                         with open(meta_file, "w", encoding="utf-8") as mf:
+                             json.dump({
+                                 "filename": gallery_filename,
+                                 "posted": False,
+                                 "posted_title": None,
+                                 "posted_desc": None,
+                                 "posted_link": None,
+                                 "posted_account": None,
+                                 "posted_at": None,
+                                 "prompt": prompt
+                             }, mf, indent=4)
+                     except Exception:
+                         pass
 
                 # 2. Prepare Pinterest Title and Description (with Spintax)
                 logger_func(f"> Menyiapkan posting Pinterest ({idx+1}/{len(media_files)}) untuk akun [{account_name}]...")
@@ -341,6 +360,23 @@ async def autopilot_loop(logger_func):
 
                 if upload_success:
                     logger_func(f"✅ PIN BERHASIL DIPOSTING ({idx+1}/{len(media_files)}): [{account_name}] {pin_title[:30]}...")
+                    if gallery_filename:
+                        try:
+                            import json
+                            meta_file = f"storage/gallery/{gallery_filename}.json"
+                            with open(meta_file, "w", encoding="utf-8") as mf:
+                                json.dump({
+                                    "filename": gallery_filename,
+                                    "posted": True,
+                                    "posted_title": pin_title[:99],
+                                    "posted_desc": pin_desc[:499],
+                                    "posted_link": link,
+                                    "posted_account": account_name,
+                                    "posted_at": int(time.time()),
+                                    "prompt": prompt
+                                }, mf, indent=4)
+                        except Exception:
+                            pass
                 else:
                     logger_func(f"❌ PIN GAGAL ({idx+1}/{len(media_files)}): [{account_name}]")
 

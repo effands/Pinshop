@@ -1508,17 +1508,40 @@ function App() {
                         fontWeight: 'bold',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '4px',
+                        zIndex: 5
                       }}>
                         {file.type === 'video' ? <Film size={10} /> : <ImageIcon size={10} />}
                         {file.type.toUpperCase()}
                       </span>
+
+                      {/* Floating Posted Badge */}
+                      {file.meta && file.meta.posted && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '8px',
+                          left: '75px',
+                          padding: '4px 8px',
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: 'white',
+                          borderRadius: '20px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                          zIndex: 5
+                        }}>
+                          🏆 Posted
+                        </span>
+                      )}
                     </div>
                     
                     <div style={{marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                       <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px', flex: 1}}>
-                        <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis'}} title={file.filename}>
-                          {file.filename}
+                        <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis'}} title={file.meta && file.meta.posted_title ? file.meta.posted_title : file.filename}>
+                          {file.meta && file.meta.posted_title ? file.meta.posted_title : file.filename}
                         </p>
                         <p style={{fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0'}}>
                           {(file.size / (1024 * 1024)).toFixed(2)} MB • {new Date(file.created_at * 1000).toLocaleDateString()}
@@ -1616,117 +1639,243 @@ function App() {
               <XCircle size={22} />
             </button>
 
-            {/* Media Content Box */}
+            {/* Split Screen Container */}
             <div style={{
-              maxWidth: '85%',
-              maxHeight: '85vh',
               display: 'flex',
-              flexDirection: 'column',
+              width: '90%',
+              maxWidth: '1200px',
+              height: '80vh',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '16px'
+              gap: '40px'
             }}>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* Left Nav Arrow */}
-                {previewIndex > 0 && (
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setPreviewIndex(previewIndex - 1)
-                    }}
-                    style={{
-                      position: 'absolute',
-                      left: '-70px',
-                      background: 'rgba(15, 23, 42, 0.85)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '48px',
-                      height: '48px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      zIndex: 10020,
-                      backdropFilter: 'blur(4px)',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                      transition: 'all 0.2s'
-                    }}
-                    title="Previous (Left Arrow)"
-                  >
-                    <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>‹</span>
-                  </button>
-                )}
+              
+              {/* Media Content Box (Left Side) */}
+              <div style={{
+                flex: '1 1 50%',
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative'
+              }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                  {/* Left Nav Arrow */}
+                  {previewIndex > 0 && (
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewIndex(previewIndex - 1)
+                      }}
+                      style={{
+                        position: 'absolute',
+                        left: '-60px',
+                        background: 'rgba(15, 23, 42, 0.85)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 10020,
+                        backdropFilter: 'blur(4px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                        transition: 'all 0.2s'
+                      }}
+                      title="Previous (Left Arrow)"
+                    >
+                      <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>‹</span>
+                    </button>
+                  )}
 
-                {/* Right Nav Arrow */}
-                {previewIndex < galleryFiles.length - 1 && (
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setPreviewIndex(previewIndex + 1)
-                    }}
-                    style={{
-                      position: 'absolute',
-                      right: '-70px',
-                      background: 'rgba(15, 23, 42, 0.85)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '48px',
-                      height: '48px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      zIndex: 10020,
-                      backdropFilter: 'blur(4px)',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                      transition: 'all 0.2s'
-                    }}
-                    title="Next (Right Arrow)"
-                  >
-                    <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>›</span>
-                  </button>
-                )}
+                  {/* Right Nav Arrow */}
+                  {previewIndex < galleryFiles.length - 1 && (
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewIndex(previewIndex + 1)
+                      }}
+                      style={{
+                        position: 'absolute',
+                        right: '-60px',
+                        background: 'rgba(15, 23, 42, 0.85)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 10020,
+                        backdropFilter: 'blur(4px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                        transition: 'all 0.2s'
+                      }}
+                      title="Next (Right Arrow)"
+                    >
+                      <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>›</span>
+                    </button>
+                  )}
 
-                {file.type === 'video' ? (
-                  <video 
-                    src={`http://127.0.0.1:8001${file.url}`} 
-                    controls 
-                    autoPlay
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '70vh',
-                      borderRadius: '16px',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                      border: '1px solid rgba(255,255,255,0.1)'
-                    }}
-                  />
-                ) : (
-                  <img 
-                    src={`http://127.0.0.1:8001${file.url}`} 
-                    alt={file.filename} 
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '70vh',
-                      borderRadius: '16px',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      objectFit: 'contain'
-                    }}
-                  />
-                )}
+                  {file.type === 'video' ? (
+                    <video 
+                      src={`http://127.0.0.1:8001${file.url}`} 
+                      controls 
+                      autoPlay
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '65vh',
+                        borderRadius: '16px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={`http://127.0.0.1:8001${file.url}`} 
+                      alt={file.filename} 
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '65vh',
+                        borderRadius: '16px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div style={{marginTop: '15px', color: 'rgba(255,255,255,0.4)', fontSize: '12px'}}>
+                  Item {previewIndex + 1} dari {galleryFiles.length}
+                </div>
               </div>
 
-              {/* Caption metadata */}
-              <div style={{textAlign: 'center', color: 'rgba(255,255,255,0.8)'}}>
-                <h4 style={{margin: 0, fontSize: '15px', fontWeight: '600'}}>{file.filename}</h4>
-                <p style={{margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)'}}>
-                  {(file.size / (1024 * 1024)).toFixed(2)} MB • {new Date(file.created_at * 1000).toLocaleDateString()} • {previewIndex + 1} of {galleryFiles.length}
-                </p>
+              {/* Detail Info Panel (Right Side) */}
+              <div style={{
+                flex: '1 1 50%',
+                background: 'rgba(30, 41, 59, 0.4)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '24px',
+                padding: '30px',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                backdropFilter: 'blur(10px)',
+                textAlign: 'left'
+              }}>
+                <div>
+                  <h3 style={{margin: '0 0 10px 0', fontSize: '20px', fontWeight: 'bold', color: '#fff'}}>
+                    {file.meta && file.meta.posted_title ? file.meta.posted_title : file.filename}
+                  </h3>
+                  <p style={{margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)'}}>
+                    File: {file.filename} • {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+
+                <hr style={{border: 'none', borderTop: '1px solid rgba(255,255,255,0.08)', margin: 0}} />
+
+                {/* Status Badge */}
+                <div>
+                  <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Status Posting</label>
+                  {file.meta && file.meta.posted ? (
+                    <div style={{display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '8px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(16, 185, 129, 0.2)'}}>
+                      🏆 Terposting ke Pinterest
+                    </div>
+                  ) : (
+                    <div style={{display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '8px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.2)'}}>
+                      ⏳ Belum Terposting / Render Only
+                    </div>
+                  )}
+                </div>
+
+                {/* Pinterest Details if Posted */}
+                {file.meta && file.meta.posted && (
+                  <>
+                    <div>
+                      <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Akun Pinterest</label>
+                      <p style={{margin: 0, fontSize: '14px', color: '#fff', fontWeight: '500'}}>{file.meta.posted_account || '-'}</p>
+                    </div>
+
+                    <div>
+                      <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Tanggal Posting</label>
+                      <p style={{margin: 0, fontSize: '14px', color: '#fff'}}>{new Date(file.meta.posted_at * 1000).toLocaleString('id-ID')}</p>
+                    </div>
+
+                    <div>
+                      <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Deskripsi Pin</label>
+                      <p style={{margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', whiteSpace: 'pre-wrap'}}>{file.meta.posted_desc || '-'}</p>
+                    </div>
+
+                    {file.meta.posted_link && (
+                      <div>
+                        <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Link Tujuan (Affiliate)</label>
+                        <div>
+                          <a 
+                            href={file.meta.posted_link} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              color: 'var(--primary)',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              textDecoration: 'none',
+                              background: 'rgba(99, 102, 241, 0.1)',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(99, 102, 241, 0.2)',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            Buka Link Produk ➔
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* AI Prompt */}
+                <div>
+                  <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Master Prompt AI</label>
+                  <p style={{
+                    margin: 0, 
+                    fontSize: '13px', 
+                    color: 'rgba(255,255,255,0.7)', 
+                    lineHeight: '1.6', 
+                    fontFamily: 'monospace',
+                    background: 'rgba(0,0,0,0.2)', 
+                    padding: '12px', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {file.meta && file.meta.prompt ? file.meta.prompt : 'Tidak ada catatan prompt.'}
+                  </p>
+                </div>
+
+                <div>
+                  <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Waktu Render File</label>
+                  <p style={{margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.5)'}}>{new Date(file.created_at * 1000).toLocaleString('id-ID')}</p>
+                </div>
               </div>
+
             </div>
           </div>
         );

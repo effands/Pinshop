@@ -115,12 +115,21 @@ async def get_gallery():
     files = []
     for f in sorted(gallery_dir.glob("*"), key=os.path.getmtime, reverse=True):
         if f.is_file() and f.suffix.lower() in {".png", ".jpg", ".jpeg", ".mp4"}:
+            meta_path = f.with_name(f.name + ".json")
+            meta_data = {}
+            if meta_path.exists():
+                try:
+                    with open(meta_path, "r", encoding="utf-8") as mf:
+                        meta_data = json.load(mf)
+                except Exception:
+                    pass
             files.append({
                 "filename": f.name,
                 "url": f"/gallery/{f.name}",
                 "type": "video" if f.suffix.lower() == ".mp4" else "image",
                 "size": f.stat().st_size,
-                "created_at": os.path.getmtime(f)
+                "created_at": os.path.getmtime(f),
+                "meta": meta_data
             })
     return {"success": True, "files": files}
 
@@ -137,6 +146,12 @@ async def delete_gallery_item(filename: str):
         
     if file_path.exists():
         file_path.unlink()
+        meta_path = file_path.with_name(file_path.name + ".json")
+        if meta_path.exists():
+            try:
+                meta_path.unlink()
+            except Exception:
+                pass
         return {"success": True}
     return {"success": False, "error": "File not found"}
 
@@ -153,6 +168,12 @@ async def delete_gallery_batch(req: DeleteBatchRequest):
             resolved_file = file_path.resolve()
             if resolved_file.is_relative_to(resolved_base) and file_path.exists():
                 file_path.unlink()
+                meta_path = file_path.with_name(file_path.name + ".json")
+                if meta_path.exists():
+                    try:
+                        meta_path.unlink()
+                    except Exception:
+                        pass
                 success_count += 1
         except Exception:
             pass
