@@ -36,6 +36,22 @@ function App() {
   const [galleryFiles, setGalleryFiles] = useState([])
   const [selectedGalleryItems, setSelectedGalleryItems] = useState([])
   const [isLoadingGallery, setIsLoadingGallery] = useState(false)
+  const [previewIndex, setPreviewIndex] = useState(null)
+
+  useEffect(() => {
+    if (previewIndex === null) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        if (previewIndex > 0) setPreviewIndex(previewIndex - 1)
+      } else if (e.key === 'ArrowRight') {
+        if (previewIndex < galleryFiles.length - 1) setPreviewIndex(previewIndex + 1)
+      } else if (e.key === 'Escape') {
+        setPreviewIndex(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [previewIndex, galleryFiles.length])
 
   const [copiedField, setCopiedField] = useState(null)
   
@@ -1366,22 +1382,32 @@ function App() {
                     boxShadow: selectedGalleryItems.includes(file.filename) ? '0 0 10px rgba(99, 102, 241, 0.15)' : 'var(--panel-shadow)',
                     transition: 'all 0.2s ease'
                   }}>
-                    <div style={{
-                      width: '100%',
-                      height: '240px',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      backgroundColor: 'rgba(0,0,0,0.05)',
-                      position: 'relative',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
+                    <div 
+                      onClick={(e) => {
+                        if (e.target.type === 'checkbox') return
+                        setPreviewIndex(idx)
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '240px',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        backgroundColor: 'rgba(0,0,0,0.05)',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'zoom-in'
+                      }}
+                    >
                       {/* Floating Checkbox */}
                       <input 
                         type="checkbox" 
                         checked={selectedGalleryItems.includes(file.filename)}
-                        onChange={() => toggleSelectGalleryItem(file.filename)}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          toggleSelectGalleryItem(file.filename)
+                        }}
                         style={{
                           position: 'absolute',
                           top: '10px',
@@ -1395,11 +1421,29 @@ function App() {
                         }}
                       />
                       {file.type === 'video' ? (
-                        <video 
-                          src={`http://127.0.0.1:8001${file.url}`} 
-                          controls 
-                          style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                        />
+                        <div style={{width: '100%', height: '100%', position: 'relative'}}>
+                          <video 
+                            src={`http://127.0.0.1:8001${file.url}`} 
+                            style={{width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none'}}
+                          />
+                          {/* Floating Play Indicator */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            background: 'rgba(0, 0, 0, 0.6)',
+                            borderRadius: '50%',
+                            padding: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                          }}>
+                            <Film size={18} />
+                          </div>
+                        </div>
                       ) : (
                         <img 
                           src={`http://127.0.0.1:8001${file.url}`} 
@@ -1485,6 +1529,151 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Lightbox Preview Modal */}
+      {previewIndex !== null && galleryFiles[previewIndex] && (() => {
+        const file = galleryFiles[previewIndex];
+        return (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.95)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.3s ease'
+          }}>
+            {/* Close Button */}
+            <button 
+              onClick={() => setPreviewIndex(null)}
+              style={{
+                position: 'absolute',
+                top: '24px',
+                right: '24px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '42px',
+                height: '42px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                zIndex: 10010
+              }}
+              title="Close (Esc)"
+            >
+              <XCircle size={22} />
+            </button>
+
+            {/* Left Nav Arrow */}
+            {previewIndex > 0 && (
+              <button 
+                onClick={() => setPreviewIndex(previewIndex - 1)}
+                style={{
+                  position: 'absolute',
+                  left: '30px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '56px',
+                  height: '56px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 10010,
+                  transition: 'all 0.2s'
+                }}
+                title="Previous (Left Arrow)"
+              >
+                <span style={{fontSize: '24px', fontWeight: 'bold'}}>‹</span>
+              </button>
+            )}
+
+            {/* Right Nav Arrow */}
+            {previewIndex < galleryFiles.length - 1 && (
+              <button 
+                onClick={() => setPreviewIndex(previewIndex + 1)}
+                style={{
+                  position: 'absolute',
+                  right: '30px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '56px',
+                  height: '56px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 10010,
+                  transition: 'all 0.2s'
+                }}
+                title="Next (Right Arrow)"
+              >
+                <span style={{fontSize: '24px', fontWeight: 'bold'}}>›</span>
+              </button>
+            )}
+
+            {/* Media Content Box */}
+            <div style={{
+              maxWidth: '80%',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px'
+            }}>
+              {file.type === 'video' ? (
+                <video 
+                  src={`http://127.0.0.1:8001${file.url}`} 
+                  controls 
+                  autoPlay
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                />
+              ) : (
+                <img 
+                  src={`http://127.0.0.1:8001${file.url}`} 
+                  alt={file.filename} 
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    objectFit: 'contain'
+                  }}
+                />
+              )}
+
+              {/* Caption metadata */}
+              <div style={{textAlign: 'center', color: 'rgba(255,255,255,0.8)'}}>
+                <h4 style={{margin: 0, fontSize: '15px', fontWeight: '600'}}>{file.filename}</h4>
+                <p style={{margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)'}}>
+                  {(file.size / (1024 * 1024)).toFixed(2)} MB • {new Date(file.created_at * 1000).toLocaleDateString()} • {previewIndex + 1} of {galleryFiles.length}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Toast Container */}
       {toast.show && (
