@@ -521,6 +521,73 @@ async def api_test_gemini_all(req: TestAllGeminiRequest):
         "invalidCount": len(invalid_keys)
     }
 
+class BulkGeneratorRequest(BaseModel):
+    theme: str
+    shopeeLink: str
+    count: int = 5
+
+@app.post("/api/generate-bulk-ideas")
+async def api_generate_bulk_ideas(req: BulkGeneratorRequest):
+    if not req.theme.strip():
+        return {"success": False, "error": "Tema tidak boleh kosong"}
+    
+    # 1. Brainstorm ideas
+    try:
+        from .gemini_manager import manager
+        ideas = await asyncio.to_thread(manager.brainstorm_ideas, req.theme, req.count)
+    except Exception as e:
+        return {"success": False, "error": f"Gagal memikirkan ide: {str(e)}"}
+    
+    if not ideas:
+        return {"success": False, "error": "AI tidak mengembalikan ide apa pun."}
+    
+    # 2. For each idea, generate SEO title, description, and master prompt
+    import time
+    import random
+    
+    new_items = []
+    for idea in ideas:
+        try:
+            # Generate SEO data from Gemini
+            seo_data = await asyncio.to_thread(manager.generate_seo_and_prompt, idea, [])
+            item_id = f"q_{int(time.time() * 1000)}_{random.randint(100, 999)}"
+            new_items.append({
+                "id": item_id,
+                "basicTitle": idea,
+                "spintaxLinks": req.shopeeLink,
+                "referenceImages": [],
+                "status": "pending",
+                "seoTitle": seo_data.get("seo_title", ""),
+                "seoDesc": seo_data.get("seo_desc", ""),
+                "masterPrompt": seo_data.get("master_prompt", "")
+            })
+        except Exception as e:
+            # If one fails, we can skip or log
+            logger.error(f"Failed to generate SEO for idea '{idea}': {e}")
+            continue
+
+    if not new_items:
+        return {"success": False, "error": "Gagal menghasilkan detail SEO untuk semua ide."}
+
+    # 3. Load settings, append items, and save
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    
+    queue = config.get("queue", [])
+    queue.extend(new_items)
+    config["queue"] = queue
+    
+    with open(settings.SETTINGS_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+        
+    send_log(f"[System] AI berhasil men-generate & memasukkan {len(new_items)} ide promosi baru ke dalam antrean.")
+    return {"success": True, "count": len(new_items)}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host=settings.HOST, port=settings.PORT, reload=True)

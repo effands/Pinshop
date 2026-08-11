@@ -143,6 +143,47 @@ function App() {
       showToast("Koneksi gagal", "error")
     }
   }
+
+  const [bulkTheme, setBulkTheme] = useState('')
+  const [bulkShopeeLink, setBulkShopeeLink] = useState('')
+  const [bulkCount, setBulkCount] = useState(5)
+  const [isGeneratingBulk, setIsGeneratingBulk] = useState(false)
+
+  const generateBulkQueueItems = async () => {
+    if (!bulkTheme.trim()) {
+      showToast("Tema utama wajib diisi!", "error")
+      return
+    }
+    if (!bulkShopeeLink.trim()) {
+      showToast("Link affiliate Shopee wajib diisi!", "error")
+      return
+    }
+
+    setIsGeneratingBulk(true)
+    try {
+      const res = await fetch(`${API_BASE}/generate-bulk-ideas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          theme: bulkTheme,
+          shopeeLink: bulkShopeeLink,
+          count: bulkCount
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast(`AI Berhasil menambahkan ${data.count} ide postingan baru ke antrean!`, "success")
+        setBulkTheme('')
+        fetchQueue()
+      } else {
+        showToast(data.error || "Gagal men-generate ide bulk", "error")
+      }
+    } catch (e) {
+      showToast("Koneksi ke backend gagal", "error")
+    } finally {
+      setIsGeneratingBulk(false)
+    }
+  }
   
   const handleCopyText = (text, fieldName) => {
     if (!text) {
@@ -365,6 +406,9 @@ function App() {
       .then(data => {
         if(Object.keys(data).length > 0) {
           setConfig(prev => ({...prev, ...data}))
+          if (data.spintaxLinks) {
+            setBulkShopeeLink(data.spintaxLinks)
+          }
         }
       })
       .catch(err => console.error(err))
@@ -1050,8 +1094,9 @@ function App() {
 
         {activeTab === 'prompt' && (
           <div>
-            <div className="panel" style={{border: '1px solid var(--primary)', background: 'var(--bg-app)'}}>
-              <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>✨ Image Reference to Master Prompt (SEO Optimized)</h3>
+            <div className="grid-2">
+              <div className="panel" style={{border: '1px solid var(--primary)', background: 'var(--bg-app)', margin: 0}}>
+                <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>✨ Image Reference to Master Prompt (SEO Optimized)</h3>
               <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
                 {/* Drag and Drop / Paste Area - Now Full Width and Sleeker */}
                 <div 
@@ -1181,6 +1226,81 @@ function App() {
                   >
                     {isAddingToQueue ? <RefreshCw size={16} className="spin" /> : <UploadCloud size={16} />} 
                     Queue Posting
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: AI Auto-Generate Bulk Ideas */}
+              <div className="panel" style={{border: '1px solid var(--success)', background: 'var(--bg-app)', margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+                <div>
+                  <h3 style={{color: 'var(--success)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <span>💡</span> AI Auto-Generate Antrean dari Tema
+                  </h3>
+                  <p style={{fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: '1.5'}}>
+                    AI akan otomatis memikirkan beberapa ide judul produk unik berdasarkan tema utama Bos, lalu merancang SEO pinterest & prompt visualnya secara bulk untuk dimasukkan ke antrean.
+                  </p>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                    <div>
+                      <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>TEMA UTAMA (TOPIK)</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        placeholder="Contoh: meja belajar estetik dan kokoh" 
+                        style={{width: '100%', boxSizing: 'border-box'}}
+                        value={bulkTheme}
+                        onChange={e => setBulkTheme(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE SHOPEE</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        placeholder="Link affiliate Shopee..." 
+                        style={{width: '100%', boxSizing: 'border-box'}}
+                        value={bulkShopeeLink}
+                        onChange={e => setBulkShopeeLink(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUMLAH POSTINGAN YANG DI-GENERATE</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="20" 
+                        className="input-field" 
+                        style={{width: '100%', boxSizing: 'border-box'}}
+                        value={bulkCount}
+                        onChange={e => setBulkCount(parseInt(e.target.value) || 5)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{marginTop: '20px'}}>
+                  <button 
+                    type="button"
+                    className="btn btn-primary" 
+                    style={{
+                      width: '100%', 
+                      height: '42px', 
+                      fontSize: '14px', 
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #06d6a0 0%, #2ec4b6 100%)',
+                      boxShadow: '0 4px 15px rgba(46, 196, 182, 0.35)',
+                      border: 'none'
+                    }}
+                    onClick={generateBulkQueueItems}
+                    disabled={isGeneratingBulk}
+                  >
+                    {isGeneratingBulk ? <RefreshCw size={16} className="spin" /> : <Zap size={16} />}
+                    {isGeneratingBulk ? 'AI sedang merancang promosi...' : 'AI Auto-Generate ke Antrean'}
                   </button>
                 </div>
               </div>
