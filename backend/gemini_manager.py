@@ -95,7 +95,7 @@ Output HANYA JSON.
                         success = True
                         break
                 except Exception as e:
-                    logger.error(f"Gemini API Error with model {model} and key index {self.current_index}: {e}")
+                    logger.warning(f"Gemini API Key index {self.current_index} failed with model {model}: {e}. Trying next key...")
             
             if success:
                 return result
@@ -219,10 +219,67 @@ Format HANYA JSON:
                         success = True
                         break
                 except Exception as e:
-                    logger.error(f"Gemini API Error with model {model} and key index {self.current_index}: {e}")
+                    logger.warning(f"Gemini API Key index {self.current_index} failed with model {model}: {e}. Trying next key...")
             
             if success:
                 return res
+                
+            if not self.switch_key():
+                raise ValueError("Semua Gemini API Key gagal.")
+            if self.current_index == start_index:
+                raise ValueError("Semua Gemini API Key gagal.")
+
+    def brainstorm_ideas(self, theme: str, count: int) -> list[str]:
+        self.load_keys()
+        if not self.keys:
+            raise ValueError("Tidak ada Gemini API Key yang disetting.")
+
+        prompt_instruction = f"""
+Berdasarkan tema/topik ini: "{theme}".
+Tugasmu adalah memikirkan dan membuat {count} ide judul produk atau sudut pandang promosi produk yang spesifik, unik, estetik, dan memiliki daya tarik tinggi untuk dicari di Pinterest.
+Setiap judul harus bervariasi jenis produknya, contoh jika temanya "meja belajar":
+- Ide 1 bisa tentang meja belajar minimalis kayu jati
+- Ide 2 bisa tentang meja belajar lipat hemat tempat untuk kamar kos
+- Ide 3 bisa tentang meja komputer sudut L-shape
+- Ide 4 bisa tentang meja belajar aesthetic warna pastel dengan laci penyimpanan
+- Ide 5 dst.
+
+Format output HARUS berupa JSON array of strings seperti contoh berikut:
+[
+  "Judul Ide 1",
+  "Judul Ide 2",
+  "Judul Ide 3"
+]
+
+HANYA kembalikan JSON array tersebut. Jangan tambahkan penjelasan lain.
+"""
+        start_index = self.current_index
+        while True:
+            key = self.get_current_key()
+            success = False
+            res = []
+            for model in ["gemini-3.6-flash", "gemini-3.5-flash"]:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+                payload = json.dumps({"contents": [{"parts": [{"text": prompt_instruction}]}]}).encode("utf-8")
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+                
+                try:
+                    with urllib.request.urlopen(req, timeout=20) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        
+                        if text.startswith("```json"): text = text[7:]
+                        if text.endswith("```"): text = text[:-3]
+                        
+                        res = json.loads(text.strip())
+                        if isinstance(res, list):
+                            success = True
+                            break
+                except Exception as e:
+                    logger.warning(f"Gemini Brainstorm Key index {self.current_index} failed with model {model}: {e}. Trying next key...")
+            
+            if success:
+                return res[:count]
                 
             if not self.switch_key():
                 raise ValueError("Semua Gemini API Key gagal.")
