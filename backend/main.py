@@ -34,7 +34,10 @@ if sys.platform == "win32":
 
 import json
 import os
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("main")
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
