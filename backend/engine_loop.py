@@ -62,28 +62,59 @@ async def autopilot_loop(logger_func):
                 await asyncio.sleep(10)
                 continue
             
-            # Call extension to generate ImageFX/VideoFX
-            if media_type == "video":
-                logger_func("> Proses 'Download' Video Mahakarya HD! (Simulated)")
-                await asyncio.sleep(8)
-                result_path = str(Path("frontend/public/logo.png").resolve()) 
-            else:
-                logger_func("> Menunggu flow merender gambar... (Simulated)")
-                await asyncio.sleep(8)
+            from omniflash.generators import generate_image, upload_image, download_image, download_video, generate_video, generate_video_i2v
+            import base64
+            import os
+            
+            project_id, _ = bridge.get_active_instance_info()
+            if not project_id:
+                project_id = "auto"
                 
-                # Mock result using the first reference image if available
-                if reference_images and len(reference_images) > 0:
-                    import base64
-                    import uuid
-                    # It's base64, we need to decode and save it temporarily to upload
-                    # But for now just use logo.png to be completely safe and avoid any base64 saving bugs
-                    result_path = str(Path("frontend/public/logo.png").resolve())
+            ref_media_id = None
+            if reference_images and len(reference_images) > 0:
+                logger_func("> Mengupload gambar referensi ke Google Flow...")
+                os.makedirs("storage", exist_ok=True)
+                ref_path = "storage/temp_ref.png"
+                img_data = reference_images[0]
+                if "," in img_data:
+                    img_data = img_data.split(",", 1)[1]
+                with open(ref_path, "wb") as f:
+                    f.write(base64.b64decode(img_data))
+                ref_media_id = await upload_image(bridge, ref_path, project_id)
+                if ref_media_id:
+                    logger_func("> Gambar referensi berhasil diupload.")
                 else:
-                    result_path = str(Path("frontend/public/logo.png").resolve())
-                logger_func("> File Foto HD berhasil didownload.")
+                    logger_func("[Warning] Gagal mengupload gambar referensi.")
 
-
-            logger_func(f"> Sukses diunduh: {Path(result_path).name}")
+            if media_type == "video":
+                logger_func("> Meminta Google Flow merender VIDEO Mahakarya HD...")
+                if ref_media_id:
+                    results = await generate_video_i2v(bridge, prompt, aspect="9:16", project_id=project_id, image_media_id=ref_media_id)
+                else:
+                    results = await generate_video(bridge, prompt, aspect="9:16", project_id=project_id)
+                
+                if not results:
+                    logger_func("[Error] Gagal merender video dari Flow.")
+                    await asyncio.sleep(30)
+                    continue
+                    
+                video_id = results[0]
+                result_path = "storage/generated.mp4"
+                await download_video(bridge, video_id, result_path)
+            else:
+                logger_func("> Meminta Google Flow merender FOTO Mahakarya HD...")
+                ref_media_ids = [ref_media_id] if ref_media_id else None
+                results = await generate_image(bridge, prompt, aspect="9:16", project_id=project_id, count=1, ref_media_ids=ref_media_ids)
+                
+                if not results:
+                    logger_func("[Error] Gagal merender gambar dari Flow.")
+                    await asyncio.sleep(30)
+                    continue
+                    
+                image_url = results[0].get("url") or results[0] # handle string just in case
+                if isinstance(image_url, dict): image_url = image_url.get("url")
+                result_path = "storage/generated.png"
+                await download_image(bridge, image_url, result_path)
             
             # Target Account
             account_name = config.get("targetAccount")
