@@ -1,12 +1,18 @@
 @echo off
-title PinShop Launcher
+title Affilia PinShop - Engine Terminal
 color 0B
 
-echo ===================================================
-echo               PINSHOP - STARTUP SCRIPT
-echo ===================================================
 echo.
-
+echo     ___    __________________    ________  ___ 
+echo    /   ^|  / ____/ ____/  _/ /   /  _/ __ ^|/   ^|
+echo   / /^| ^| / /_  / /_   / // /    / // /_/ / /^| ^|
+echo  / ___ ^|/ __/ / __/ _/ // /____/ // __  / ___ ^|
+echo /_/  ^|_/_/   /_/   /___/_____/___/_/ ^|_/_/  ^|_^|
+echo.
+echo ====================================================
+echo        PINSHOP EDITION - AUTO PINTEREST PIN
+echo ====================================================
+echo.
 REM Check if Python venv exists
 if not exist ".venv" (
     echo [System] Virtual environment tidak ditemukan. Membuat .venv...
