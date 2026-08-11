@@ -66,13 +66,22 @@ async def autopilot_loop(logger_func):
             import base64
             import os
             
-            project_id, _ = bridge.get_active_instance_info()
-            if not project_id:
-                project_id = "auto"
+            project_id, instance_name = bridge.get_active_instance_info()
+            if not project_id or project_id == "auto":
+                instances = bridge.instance_snapshot()
+                if instances and instances[0].get("project_id"):
+                    project_id = instances[0].get("project_id")
+                    instance_name = instances[0].get("name", "Default")
+                else:
+                    from omniflash.config import DEFAULT_PROJECT
+                    project_id = DEFAULT_PROJECT
+                    instance_name = "Default"
+            
+            logger_func(f"> [Google Flow] Project ID: {project_id} | Instance: {instance_name}")
                 
             ref_media_id = None
             if reference_images and len(reference_images) > 0:
-                logger_func("> Mengupload gambar referensi ke Google Flow...")
+                logger_func(f"> Mengupload gambar referensi ke Google Flow (Project: {project_id})...")
                 os.makedirs("storage", exist_ok=True)
                 ref_path = "storage/temp_ref.jpg"
                 raw_item = reference_images[0]
