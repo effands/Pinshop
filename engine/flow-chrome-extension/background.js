@@ -216,7 +216,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
     // Notify agent
     if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'token_captured', flowKey }));
+      ws.send(JSON.stringify({ type: 'token_captured', flowKey, projectId: currentProjectId }));
     }
   },
   { urls: ['https://aisandbox-pa.googleapis.com/*', 'https://labs.google/*'] },
@@ -312,10 +312,11 @@ function connectToAgent() {
     return;
   }
 
-  ws.onopen = () => {
+  ws.onopen = async () => {
     console.log('[Flow Agent] Connected to agent');
     chrome.alarms.clear('reconnect');
     setState('idle');
+    await _detectProjectIdFromTabs();
 
     // Token refresh alarm — 45 min gives buffer before ~60 min expiry
     chrome.alarms.create('token-refresh', { periodInMinutes: 45 });
@@ -325,11 +326,12 @@ function connectToAgent() {
       type: 'extension_ready',
       instanceId,
       instanceName,
+      projectId: currentProjectId,
       flowKeyPresent: !!flowKey,
       tokenAge: flowKey && metrics.tokenCapturedAt ? Date.now() - metrics.tokenCapturedAt : null,
     }));
     if (flowKey) {
-      ws.send(JSON.stringify({ type: 'token_captured', flowKey }));
+      ws.send(JSON.stringify({ type: 'token_captured', flowKey, projectId: currentProjectId }));
     }
     // Backend is reachable again — push any responses queued while it was down.
     flushOutbox();
