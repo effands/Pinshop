@@ -1249,16 +1249,16 @@ function App() {
                             {item.status}
                           </span>
                           <button 
-                            className="btn btn-outline" 
-                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6'}}
+                            className="btn btn-action-edit" 
+                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
                             onClick={() => handleEditQueueItem(item)}
                             title="Edit"
                           >
                             <Edit3 size={12} />
                           </button>
                           <button 
-                            className="btn btn-outline" 
-                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(239, 35, 60, 0.2)', color: 'var(--danger)'}}
+                            className="btn btn-action-delete" 
+                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
                             onClick={() => deleteQueueItem(item.id)}
                             title="Hapus"
                           >

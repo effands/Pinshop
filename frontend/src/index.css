@@ -275,12 +275,26 @@ textarea.form-control {
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.05);
 }
 
-.btn-outline:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  border-color: transparent;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+}
+
+.btn-action-edit {
+  background: transparent !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: #8b5cf6 !important;
+}
+.btn-action-edit:hover {
+  background: #8b5cf6 !important;
+  color: #fff !important;
+}
+
+.btn-action-delete {
+  background: transparent !important;
+  border: 1px solid rgba(239, 35, 60, 0.3) !important;
+  color: #ef233c !important;
+}
+.btn-action-delete:hover {
+  background: #ef233c !important;
+  color: #fff !important;
 }
 
 .btn-danger {
