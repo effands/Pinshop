@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2 } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -440,6 +440,7 @@ function App() {
               <table className="custom-table">
                 <thead>
                   <tr>
+                    <th style={{width: '50px'}}>No.</th>
                     <th>Nama Akun</th>
                     <th>Status Cookies</th>
                     <th>Last Checked</th>
@@ -449,6 +450,7 @@ function App() {
                 <tbody>
                   {accountsList.map((acc, idx) => (
                     <tr key={idx}>
+                      <td style={{color: 'var(--text-muted)'}}>{idx + 1}</td>
                       <td style={{fontWeight: '500'}}>{acc.name}</td>
                       <td>
                         {acc.status === 'valid' ? 
@@ -463,8 +465,8 @@ function App() {
                         <button className="btn btn-outline" style={{padding: '6px 12px', fontSize: '12px', marginRight: '8px'}} onClick={() => handleCheckAccount(acc.name)}>
                           Cek Status
                         </button>
-                        <button className="btn btn-outline" style={{padding: '6px 12px', fontSize: '12px', borderColor: 'var(--error)', color: 'var(--error)'}} onClick={() => handleDeleteAccount(acc.name)}>
-                          Hapus
+                        <button className="btn btn-outline" style={{padding: '6px 12px', fontSize: '12px', borderColor: 'var(--error)', color: 'var(--error)'}} onClick={() => handleDeleteAccount(acc.name)} title="Hapus Akun">
+                          <Trash2 size={14} />
                         </button>
                       </td>
                     </tr>
