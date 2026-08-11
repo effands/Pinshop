@@ -745,29 +745,42 @@ function App() {
                   <input id="hiddenFileInput" type="file" multiple accept="image/*" style={{display: 'none'}} onChange={handleManualFile} />
                 </div>
                 
-                {/* Form Inputs Grid - Sleek & Fully Responsive */}
+                {/* Form Inputs Flex Row - Sleek & Fully Responsive */}
                 <div style={{
                   display: 'flex',
                   flexWrap: 'wrap',
                   gap: '16px',
                   alignItems: 'end'
                 }}>
-                  <div className="form-group" style={{margin: 0, flex: '2 1 350px'}}>
+                  <div className="form-group" style={{margin: 0, flex: '3 1 300px'}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Judul Dasar (Shopee dll)</label>
                     <input type="text" className="form-control" value={manualBasicTitle} onChange={e => setManualBasicTitle(e.target.value)} placeholder="Contoh: Meja Kerja Minimalis Gaya Industrial..." />
                   </div>
                   
-                  <div className="form-group" style={{margin: 0, flex: '1 1 180px'}}>
+                  <div className="form-group" style={{margin: 0, flex: '2 1 200px'}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Link Affiliate (Shopee/TikTok)</label>
                     <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
                   </div>
-                </div>
 
-                {/* Generate Button Container */}
-                <div style={{marginTop: '8px'}}>
-                  <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px', fontSize: '15px', fontWeight: 'bold'}} onClick={generateSEO} disabled={isGeneratingSEO}>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{
+                      height: '42px', 
+                      padding: '0 24px', 
+                      fontSize: '14px', 
+                      fontWeight: 'bold', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '8px', 
+                      flex: '1 1 150px',
+                      whiteSpace: 'nowrap'
+                    }} 
+                    onClick={generateSEO} 
+                    disabled={isGeneratingSEO}
+                  >
                     {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
-                    {isGeneratingSEO ? 'Sedang Meracik SEO & Prompt Spintax...' : 'Generate SEO & Master Prompt'}
+                    {isGeneratingSEO ? 'Generating...' : 'Generate SEO'}
                   </button>
                 </div>
               </div>
