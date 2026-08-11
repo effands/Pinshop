@@ -41,15 +41,17 @@ class GeminiManager:
         return self.current_index != 0
 
     def test_key(self, api_key: str) -> bool:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={api_key}"
-        payload = json.dumps({"contents": [{"parts": [{"text": "Say 'OK'"}]}]}).encode("utf-8")
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return True
-        except Exception as e:
-            return False
+        for model in ["gemini-3.6-flash", "gemini-3.5-flash"]:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            payload = json.dumps({"contents": [{"parts": [{"text": "Say 'OK'"}]}]}).encode("utf-8")
+            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    return True
+            except Exception as e:
+                logger.warning(f"Key test failed for model {model}: {e}")
+        return False
 
     def generate_prompt(self, niche: str) -> dict:
         self.load_keys()
@@ -72,28 +74,36 @@ Output HANYA JSON.
         start_index = self.current_index
         while True:
             key = self.get_current_key()
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={key}"
-            payload = json.dumps({"contents": [{"parts": [{"text": prompt_instruction}]}]}).encode("utf-8")
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+            success = False
+            result = None
+            for model in ["gemini-3.6-flash", "gemini-3.5-flash"]:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+                payload = json.dumps({"contents": [{"parts": [{"text": prompt_instruction}]}]}).encode("utf-8")
+                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+                
+                try:
+                    with urllib.request.urlopen(req, timeout=15) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        
+                        if text.startswith("```json"):
+                            text = text[7:]
+                        if text.endswith("```"):
+                            text = text[:-3]
+                        
+                        result = json.loads(text.strip())
+                        success = True
+                        break
+                except Exception as e:
+                    logger.error(f"Gemini API Error with model {model} and key index {self.current_index}: {e}")
             
-            try:
-                with urllib.request.urlopen(req, timeout=15) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    
-                    if text.startswith("```json"):
-                        text = text[7:]
-                    if text.endswith("```"):
-                        text = text[:-3]
-                    
-                    result = json.loads(text.strip())
-                    return result
-            except Exception as e:
-                logger.error(f"Gemini API Error with key index {self.current_index}: {e}")
-                if not self.switch_key():
-                    raise ValueError("Semua Gemini API Key gagal atau kehabisan kuota limit.")
-                if self.current_index == start_index:
-                    raise ValueError("Semua Gemini API Key gagal.")
+            if success:
+                return result
+                
+            if not self.switch_key():
+                raise ValueError("Semua Gemini API Key gagal atau kehabisan kuota limit.")
+            if self.current_index == start_index:
+                raise ValueError("Semua Gemini API Key gagal.")
 
     def generate_prompt_from_image(self, images_base64: list[str], basic_title: str) -> dict:
         self.load_keys()
@@ -160,37 +170,45 @@ Format HANYA JSON:
         start_index = self.current_index
         while True:
             key = self.get_current_key()
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={key}"
+            success = False
+            res = None
+            for model in ["gemini-3.6-flash", "gemini-3.5-flash"]:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+                
+                payload = {
+                    "contents": [{
+                        "parts": parts
+                    }]
+                }
+                
+                req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+                
+                try:
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        
+                        if text.startswith("```json"): text = text[7:]
+                        if text.endswith("```"): text = text[:-3]
+                        
+                        res = json.loads(text.strip())
+                        if "master_prompt" in res and isinstance(res["master_prompt"], str):
+                            import re
+                            # Strip --ar flags and 9:16 ratios
+                            cleaned = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', res["master_prompt"])
+                            cleaned = re.sub(r'\b9:16\b', '', cleaned)
+                            res["master_prompt"] = cleaned.strip()
+                        success = True
+                        break
+                except Exception as e:
+                    logger.error(f"Gemini API Error with model {model} and key index {self.current_index}: {e}")
             
-            payload = {
-                "contents": [{
-                    "parts": parts
-                }]
-            }
-            
-            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
-            
-            try:
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    
-                    if text.startswith("```json"): text = text[7:]
-                    if text.endswith("```"): text = text[:-3]
-                    
-                    res = json.loads(text.strip())
-                    if "master_prompt" in res and isinstance(res["master_prompt"], str):
-                        import re
-                        # Strip --ar flags and 9:16 ratios
-                        cleaned = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', res["master_prompt"])
-                        cleaned = re.sub(r'\b9:16\b', '', cleaned)
-                        res["master_prompt"] = cleaned.strip()
-                    return res
-            except Exception as e:
-                logger.error(f"Gemini API Error with key index {self.current_index}: {e}")
-                if not self.switch_key():
-                    raise ValueError("Semua Gemini API Key gagal.")
-                if self.current_index == start_index:
-                    raise ValueError("Semua Gemini API Key gagal.")
+            if success:
+                return res
+                
+            if not self.switch_key():
+                raise ValueError("Semua Gemini API Key gagal.")
+            if self.current_index == start_index:
+                raise ValueError("Semua Gemini API Key gagal.")
 
 manager = GeminiManager()
