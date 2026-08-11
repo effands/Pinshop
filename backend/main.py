@@ -234,6 +234,15 @@ from typing import Dict, Any
 
 @app.post("/api/save-config")
 async def save_config(config: Dict[str, Any]):
+    existing = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                existing = json.load(f)
+            except:
+                pass
+    config["queue"] = existing.get("queue", [])
+    
     with open(settings.SETTINGS_FILE, "w") as f:
         json.dump(config, f, indent=4)
     send_log("[System] Configuration saved successfully.")
