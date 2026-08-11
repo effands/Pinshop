@@ -304,6 +304,27 @@ async def delete_queue_item(item_id: str):
             json.dump(config, f, indent=4)
     return {"success": True}
 
+@app.put("/api/queue/{item_id}")
+async def update_queue_item(item_id: str, updated_item: QueueItem):
+    config = {}
+    if settings.SETTINGS_FILE.exists():
+        with open(settings.SETTINGS_FILE, "r") as f:
+            try:
+                config = json.load(f)
+            except:
+                pass
+    if "queue" in config:
+        for idx, i in enumerate(config["queue"]):
+            if i.get("id") == item_id:
+                data = updated_item.dict()
+                data["id"] = item_id
+                data["status"] = i.get("status", "pending")
+                config["queue"][idx] = data
+                break
+        with open(settings.SETTINGS_FILE, "w") as f:
+            json.dump(config, f, indent=4)
+    return {"success": True}
+
 @app.post("/api/queue/clear")
 async def clear_queue():
     config = {}

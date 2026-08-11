@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart, AlertTriangle } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, Edit3, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart, AlertTriangle } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -71,6 +71,54 @@ function App() {
   }
 
   const [copiedField, setCopiedField] = useState(null)
+  const [editingQueueItem, setEditingQueueItem] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editLinks, setEditLinks] = useState('')
+  const [editSeoTitle, setEditSeoTitle] = useState('')
+  const [editSeoDesc, setEditSeoDesc] = useState('')
+  const [editMasterPrompt, setEditMasterPrompt] = useState('')
+
+  const handleEditQueueItem = (item) => {
+    setEditingQueueItem(item)
+    setEditTitle(item.basicTitle || '')
+    setEditLinks(item.spintaxLinks || '')
+    setEditSeoTitle(item.seoTitle || '')
+    setEditSeoDesc(item.seoDesc || '')
+    setEditMasterPrompt(item.masterPrompt || '')
+  }
+
+  const saveEditedQueueItem = async () => {
+    if (!editTitle) {
+      showToast("Judul Dasar wajib diisi!", "error")
+      return
+    }
+    try {
+      const res = await fetch(`${API_BASE}/queue/${editingQueueItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingQueueItem.id,
+          basicTitle: editTitle,
+          spintaxLinks: editLinks,
+          referenceImages: editingQueueItem.referenceImages || [],
+          status: editingQueueItem.status || 'pending',
+          seoTitle: editSeoTitle,
+          seoDesc: editSeoDesc,
+          masterPrompt: editMasterPrompt
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Item antrean berhasil diperbarui!", "success")
+        setEditingQueueItem(null)
+        fetchQueue()
+      } else {
+        showToast("Gagal memperbarui item antrean", "error")
+      }
+    } catch (e) {
+      showToast("Koneksi gagal", "error")
+    }
+  }
   
   const handleCopyText = (text, fieldName) => {
     if (!text) {
@@ -1202,6 +1250,14 @@ function App() {
                           </span>
                           <button 
                             className="btn btn-outline" 
+                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary-glow)'}}
+                            onClick={() => handleEditQueueItem(item)}
+                            title="Edit"
+                          >
+                            <Edit3 size={12} style={{color: 'rgb(139, 92, 246)'}} />
+                          </button>
+                          <button 
+                            className="btn btn-outline" 
                             style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(239, 35, 60, 0.2)', color: 'var(--danger)'}}
                             onClick={() => deleteQueueItem(item.id)}
                             title="Hapus"
@@ -1958,6 +2014,147 @@ function App() {
                 }}
               >
                 Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Queue Item Modal */}
+      {editingQueueItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 20000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#151c2c',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            width: '600px',
+            maxWidth: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            padding: '30px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px'}}>
+              <h3 style={{margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <Edit3 size={18} style={{color: 'rgb(139, 92, 246)'}} /> Edit Item Antrean
+              </h3>
+              <button 
+                onClick={() => setEditingQueueItem(null)} 
+                style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px'}}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '8px'}}>
+              <div>
+                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUDUL DASAR</label>
+                <input 
+                  type="text" 
+                  value={editTitle} 
+                  onChange={(e) => setEditTitle(e.target.value)} 
+                  className="input-field" 
+                  style={{width: '100%', boxSizing: 'border-box'}}
+                />
+              </div>
+
+              <div>
+                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE (SPINTAX)</label>
+                <input 
+                  type="text" 
+                  value={editLinks} 
+                  onChange={(e) => setEditLinks(e.target.value)} 
+                  className="input-field" 
+                  style={{width: '100%', boxSizing: 'border-box'}}
+                />
+              </div>
+
+              <div>
+                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUDUL SEO PINTEREST (SPINTAX)</label>
+                <input 
+                  type="text" 
+                  value={editSeoTitle} 
+                  onChange={(e) => setEditSeoTitle(e.target.value)} 
+                  className="input-field" 
+                  style={{width: '100%', boxSizing: 'border-box'}}
+                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
+                />
+              </div>
+
+              <div>
+                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>DESKRIPSI SEO PINTEREST (SPINTAX)</label>
+                <textarea 
+                  value={editSeoDesc} 
+                  onChange={(e) => setEditSeoDesc(e.target.value)} 
+                  className="input-field" 
+                  rows={4}
+                  style={{width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit'}}
+                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
+                />
+              </div>
+
+              <div>
+                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>AI MASTER PROMPT (SPINTAX)</label>
+                <textarea 
+                  value={editMasterPrompt} 
+                  onChange={(e) => setEditMasterPrompt(e.target.value)} 
+                  className="input-field" 
+                  rows={4}
+                  style={{width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit'}}
+                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
+                />
+              </div>
+            </div>
+
+            <div style={{display: 'flex', gap: '12px', width: '100%', marginTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px'}}>
+              <button 
+                type="button"
+                className="btn" 
+                onClick={() => setEditingQueueItem(null)}
+                style={{
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  fontSize: '14px', 
+                  fontWeight: 'bold', 
+                  color: '#fff', 
+                  background: 'rgba(255,255,255,0.08)', 
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  cursor: 'pointer'
+                }}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="btn btn-primary" 
+                onClick={saveEditedQueueItem}
+                style={{
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  fontSize: '14px', 
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Simpan Perubahan
               </button>
             </div>
           </div>
