@@ -1310,30 +1310,23 @@ function App() {
             </div>
 
             {/* Bulk Queue Panel */}
-            <div className="panel" style={{
-              marginTop: '24px', 
-              border: '1px solid var(--panel-border)',
-              background: 'var(--panel-bg)',
-              borderRadius: '16px',
-              padding: '20px'
-            }}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
-                <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
-                  <span>📋</span> Antrean Posting Massal ({queueItems.length} Produk)
-                </h3>
-                {queueItems.length > 0 && (
+            {queueItems.length > 0 && (
+              <div className="panel" style={{
+                marginTop: '24px', 
+                border: '1px solid var(--panel-border)',
+                background: 'var(--panel-bg)',
+                borderRadius: '16px',
+                padding: '20px'
+              }}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                  <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
+                    <span>📋</span> Antrean Posting Massal ({queueItems.length} Produk)
+                  </h3>
                   <button className="btn btn-action-delete" style={{padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
                     Kosongkan Antrean
                   </button>
-                )}
-              </div>
-              
-              {queueItems.length === 0 ? (
-                <div style={{textAlign: 'center', padding: '30px 20px', color: 'var(--text-muted)'}}>
-                  <p style={{fontSize: '13px', margin: 0}}>Belum ada produk dalam antrean massal.</p>
-                  <p style={{fontSize: '12px', marginTop: '6px', opacity: 0.8}}>Masukkan foto dan judul di atas, lalu klik "Queue Posting" untuk menumpuk antrean.</p>
                 </div>
-              ) : (
+                
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px'}}>
                   {queueItems.map((item, idx) => {
                     let statusColor = 'var(--text-muted)';
@@ -1416,8 +1409,8 @@ function App() {
                     )
                   })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* AI Master Prompt Luxury Panel */}
             <div className="panel" style={{
