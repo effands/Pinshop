@@ -1250,11 +1250,11 @@ function App() {
                           </span>
                           <button 
                             className="btn btn-outline" 
-                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary-glow)'}}
+                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6'}}
                             onClick={() => handleEditQueueItem(item)}
                             title="Edit"
                           >
-                            <Edit3 size={12} style={{color: 'rgb(139, 92, 246)'}} />
+                            <Edit3 size={12} />
                           </button>
                           <button 
                             className="btn btn-outline" 
