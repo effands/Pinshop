@@ -8,9 +8,17 @@ import sys
 # Persist Pinterest sessions in separate dirs per account
 PROFILES_BASE_DIR = Path("storage/pinterest_profiles")
 
-async def upload_to_pinterest(image_path: str, title: str, description: str, link: str, account_name: str = "default") -> bool:
+async def upload_to_pinterest(image_path: str, title: str, description: str, link: str, account_name: str = "default", logger_func=None) -> bool:
+    def log(msg):
+        if logger_func:
+            logger_func(msg)
+        else:
+            print(msg)
+
     profile_dir = PROFILES_BASE_DIR / account_name
     profile_dir.mkdir(parents=True, exist_ok=True)
+    
+    log(f"> Membuka browser Pinterest [{account_name}]...")
     async with async_playwright() as p:
         browser = await p.chromium.launch_persistent_context(
             user_data_dir=str(profile_dir),
@@ -19,31 +27,37 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
         )
         page = await browser.new_page()
         try:
+            log("> Mengakses halaman Pin Creation...")
             await page.goto("https://www.pinterest.com/pin-creation-tool/")
             await page.wait_for_timeout(3000)
             if "login" in page.url:
-                print(f"[{account_name}] Not logged in to Pinterest. Please login manually first via Auth Setup.")
+                log(f"[Error] Akun [{account_name}] belum login di Pinterest! Silakan login di tab Auth.")
                 await browser.close()
                 return False
             
+            log(f"> Mengunggah file media ({os.path.basename(image_path)})...")
             file_input = page.locator("input#storyboard-upload-input")
             await file_input.wait_for(state="attached")
             await file_input.set_input_files(image_path)
             await page.wait_for_timeout(2000)
             
+            log(f"> Mengisi Judul: {title[:40]}...")
             title_input = page.locator("input#storyboard-selector-title, input[placeholder*='Title'], input[placeholder*='Judul'], input[aria-label*='Title'], input[aria-label*='Judul']").first
             if await title_input.is_visible():
                 await title_input.fill(title)
                 
+            log("> Mengisi Deskripsi & Hashtag SEO...")
             desc_input = page.locator("div[aria-label*='Deskripsikan'], div[aria-label*='Tell everyone'], div[aria-label*='description' i], div[role='textbox'], div[contenteditable='true']").first
             if await desc_input.is_visible():
                 await desc_input.fill(description)
                 
-            link_input = page.locator("input#scrape-view-website-link, input[placeholder*='tautan'], input[placeholder*='link' i], input[aria-label*='link' i], input[aria-label*='tautan']").first
-            if await link_input.is_visible():
-                await link_input.fill(link)
+            if link:
+                log(f"> Menyisipkan Tautan Affiliate...")
+                link_input = page.locator("input#scrape-view-website-link, input[placeholder*='tautan'], input[placeholder*='link' i], input[aria-label*='link' i], input[aria-label*='tautan']").first
+                if await link_input.is_visible():
+                    await link_input.fill(link)
                 
-            # Check Publish / Terbitkan / Simpan buttons
+            log("> Menekan tombol Terbitkan (Publish)...")
             publish_clicked = False
             for btn_name in ["Publish", "Terbitkan", "Simpan", "Save"]:
                 btn = page.get_by_role("button", name=btn_name).first
@@ -53,7 +67,6 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                     break
             
             if not publish_clicked:
-                # Fallback to red publish button selector
                 btn = page.locator("button[data-test-id='board-dropdown-save-button'], button:has-text('Publish'), button:has-text('Terbitkan')").first
                 if await btn.is_visible():
                     await btn.click()
@@ -61,9 +74,10 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
 
             await page.wait_for_timeout(8000)
             await browser.close()
+            log(f"✅ Pin Sukses Diterbitkan ke Pinterest!")
             return True
         except Exception as e:
-            print(f"Pinterest Upload Error [{account_name}]: {e}")
+            log(f"[Error] Gagal upload ke Pinterest [{account_name}]: {e}")
             await browser.close()
             return False
 

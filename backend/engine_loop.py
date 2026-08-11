@@ -152,7 +152,7 @@ async def autopilot_loop(logger_func):
                 result_path = "storage/generated.mp4"
                 await download_video(bridge, video_id, result_path)
             else:
-                logger_func("> Meminta Google Flow merender FOTO Mahakarya HD...")
+                logger_func("> Mengirim prompt ke Google Flow ImageFX AI...")
                 ref_media_ids = [ref_media_id] if ref_media_id else None
                 results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=1, ref_media_ids=ref_media_ids)
                 
@@ -161,13 +161,16 @@ async def autopilot_loop(logger_func):
                     await asyncio.sleep(30)
                     continue
                     
+                logger_func("> Gambar berhasil dirender oleh Google Flow!")
                 first_item = results[0]
                 image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
                 result_path = "storage/generated.png"
-                logger_func(f"> Mengunduh gambar hasil render AI...")
+                logger_func("> Mengunduh file gambar HD ke disk...")
                 dl_ok = await download_image(bridge, image_url, result_path)
                 if not dl_ok:
                     logger_func("[Warning] Gagal mengunduh gambar hasil render.")
+                else:
+                    logger_func("> File Foto HD berhasil didownload.")
             
             # Target Account
             account_name = config.get("targetAccount")
@@ -176,7 +179,7 @@ async def autopilot_loop(logger_func):
                 await asyncio.sleep(30)
                 continue
                 
-            logger_func(f"> Menyiapkan akun Pinterest [{account_name}]...")
+            logger_func(f"> Menyiapkan posting Pinterest untuk akun [{account_name}]...")
             
             # Use SEO Data if present, otherwise fallback to auto-extract or random
             from .spintax import resolve_shopee_title
@@ -194,18 +197,18 @@ async def autopilot_loop(logger_func):
             else:
                 pin_desc = f"{pin_title}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
 
-            logger_func("> Membuka Pinterest Pin Creation...")
             from .social.pinterest import upload_to_pinterest
             upload_success = await upload_to_pinterest(
                 image_path=result_path,
                 title=pin_title[:99],
                 description=pin_desc[:499],
                 link=link,
-                account_name=account_name
+                account_name=account_name,
+                logger_func=logger_func
             )
             
             if upload_success:
-                logger_func(f"✅ PIN BERHASIL: [{account_name}] {pin_title[:30]}...")
+                logger_func(f"✅ PIN BERHASIL DIPOSTING: [{account_name}] {pin_title[:30]}...")
                 # Clear SEO data from config after successful pin
                 if seo_title or seo_desc or (reference_images and len(reference_images) > 0) or prompt:
                     config["seoTitle"] = ""
