@@ -73,10 +73,10 @@ if not exist "frontend\node_modules" (
 
 echo.
 echo [System] Memulai UI (Frontend) di background...
-start /b cmd /c "cd frontend && npm run dev"
+start /b cmd /c "cd frontend && npm run dev -- --port 5115"
 
-echo [System] Mengecek proses lama yang masih nyangkut di port 8001/9227...
-for %%P in (8001 9227) do (
+echo [System] Mengecek proses lama yang masih nyangkut di port 8015/9227...
+for %%P in (8015 9227) do (
     for /f "tokens=5" %%A in ('netstat -ano ^| findstr /r /c:"127.0.0.1:%%P .*LISTENING"') do (
         echo [System] Menutup proses lama ^(PID %%A^) di port %%P...
         taskkill /F /PID %%A >nul 2>nul
@@ -85,10 +85,10 @@ for %%P in (8001 9227) do (
 
 echo [System] Menyiapkan browser... (Mohon tunggu sebentar)
 timeout /t 3 /nobreak > nul
-start http://localhost:5173
+start http://localhost:5115
 
 echo [System] Menjalankan Backend Engine...
 call .venv\Scripts\activate
-".venv\Scripts\python.exe" -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
+".venv\Scripts\python.exe" -m uvicorn backend.main:app --host 127.0.0.1 --port 8015
 
 pause
