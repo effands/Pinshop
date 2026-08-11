@@ -36,6 +36,19 @@ function App() {
   const [galleryFiles, setGalleryFiles] = useState([])
   const [isLoadingGallery, setIsLoadingGallery] = useState(false)
 
+  const [copiedField, setCopiedField] = useState(null)
+  
+  const handleCopyText = (text, fieldName) => {
+    if (!text) {
+      showToast(`${fieldName} masih kosong!`, 'info')
+      return
+    }
+    navigator.clipboard.writeText(text)
+    setCopiedField(fieldName)
+    showToast(`${fieldName} disalin ke clipboard!`, 'success')
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
   const fetchGallery = async () => {
     setIsLoadingGallery(true)
     try {
@@ -786,25 +799,128 @@ function App() {
               </div>
             </div>
 
-            <div className="panel" style={{marginTop: '20px'}}>
-              <h3 style={{color: 'var(--primary)'}}>AI Master Prompt (Kirim ke Flow)</h3>
-              <textarea className="form-control" rows="8" value={config.masterPrompt} onChange={e => setConfig({...config, masterPrompt: e.target.value})} placeholder="Master prompt utuh dari AI..."></textarea>
+            {/* AI Master Prompt Luxury Panel */}
+            <div className="panel" style={{
+              marginTop: '24px', 
+              border: '1px solid rgba(139, 92, 246, 0.25)', 
+              background: 'linear-gradient(135deg, var(--panel-bg), rgba(139, 92, 246, 0.03))',
+              position: 'relative',
+              borderRadius: '16px',
+              padding: '20px'
+            }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'}}>
+                <h3 style={{color: 'rgb(139, 92, 246)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
+                  <span style={{display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 8px #8b5cf6'}}></span>
+                  AI Master Prompt (Kirim ke Flow)
+                </h3>
+                <button 
+                  className="btn btn-outline" 
+                  style={{padding: '4px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px'}}
+                  onClick={() => handleCopyText(config.masterPrompt, 'Master Prompt')}
+                >
+                  {copiedField === 'Master Prompt' ? <Check size={14} style={{color: 'var(--success)'}} /> : <Copy size={14} />}
+                  {copiedField === 'Master Prompt' ? 'Disalin' : 'Salin Prompt'}
+                </button>
+              </div>
+              <textarea 
+                className="form-control" 
+                rows="6" 
+                value={config.masterPrompt} 
+                onChange={e => setConfig({...config, masterPrompt: e.target.value})} 
+                placeholder="Master prompt utuh dari AI..."
+                style={{
+                  fontFamily: '"Fira Code", "JetBrains Mono", source-code-pro, Menlo, Monaco, Consolas, monospace',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  background: 'rgba(255,255,255,0.03)',
+                  borderColor: 'rgba(139, 92, 246, 0.2)',
+                  color: 'var(--text-primary)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                }}
+              />
             </div>
 
-            <div className="panel" style={{marginTop: '20px', borderLeft: '4px solid var(--primary)'}}>
-              <h3 style={{color: 'var(--primary)', marginBottom: '16px'}}>📌 Pinterest SEO Metadata</h3>
-              <div className="form-group">
-                <label>Judul SEO Pinterest</label>
-                <input type="text" className="form-control" value={config.seoTitle} onChange={e => setConfig({...config, seoTitle: e.target.value})} />
+            {/* Pinterest SEO Metadata Luxury Panel */}
+            <div className="panel" style={{
+              marginTop: '24px', 
+              borderLeft: '4px solid #E60023',
+              borderTop: '1px solid rgba(230, 0, 35, 0.1)',
+              borderRight: '1px solid rgba(230, 0, 35, 0.1)',
+              borderBottom: '1px solid rgba(230, 0, 35, 0.1)',
+              background: 'linear-gradient(135deg, var(--panel-bg), rgba(230, 0, 35, 0.02))',
+              borderRadius: '16px',
+              padding: '20px'
+            }}>
+              <h3 style={{color: '#E60023', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
+                <span>📌</span> Pinterest SEO Metadata
+              </h3>
+              
+              <div className="form-group" style={{position: 'relative'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
+                  <label style={{margin: 0, fontWeight: '600', fontSize: '12px'}}>Judul SEO Pinterest</label>
+                  <button 
+                    className="btn btn-outline" 
+                    style={{padding: '2px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent'}}
+                    onClick={() => handleCopyText(config.seoTitle, 'Judul SEO')}
+                  >
+                    {copiedField === 'Judul SEO' ? <Check size={12} style={{color: 'var(--success)'}} /> : <Copy size={12} />}
+                    {copiedField === 'Judul SEO' ? 'Disalin' : 'Salin'}
+                  </button>
+                </div>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={config.seoTitle} 
+                  onChange={e => setConfig({...config, seoTitle: e.target.value})} 
+                  style={{
+                    fontWeight: '500',
+                    fontSize: '14px',
+                    borderColor: 'rgba(230, 0, 35, 0.15)',
+                    background: 'rgba(255,255,255,0.02)'
+                  }}
+                />
               </div>
-              <div className="form-group" style={{marginBottom: 0}}>
-                <label>Deskripsi SEO Pinterest (dengan hashtag)</label>
-                <textarea className="form-control" rows="4" value={config.seoDesc} onChange={e => setConfig({...config, seoDesc: e.target.value})}></textarea>
+              
+              <div className="form-group" style={{marginBottom: 0, position: 'relative'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
+                  <label style={{margin: 0, fontWeight: '600', fontSize: '12px'}}>Deskripsi SEO Pinterest (dengan hashtag)</label>
+                  <button 
+                    className="btn btn-outline" 
+                    style={{padding: '2px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent'}}
+                    onClick={() => handleCopyText(config.seoDesc, 'Deskripsi SEO')}
+                  >
+                    {copiedField === 'Deskripsi SEO' ? <Check size={12} style={{color: 'var(--success)'}} /> : <Copy size={12} />}
+                    {copiedField === 'Deskripsi SEO' ? 'Disalin' : 'Salin'}
+                  </button>
+                </div>
+                <textarea 
+                  className="form-control" 
+                  rows="4" 
+                  value={config.seoDesc} 
+                  onChange={e => setConfig({...config, seoDesc: e.target.value})}
+                  style={{
+                    lineHeight: '1.5',
+                    borderColor: 'rgba(230, 0, 35, 0.15)',
+                    background: 'rgba(255,255,255,0.02)'
+                  }}
+                />
               </div>
             </div>
 
-            <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '10px'}}>
-              <button className="btn btn-primary" onClick={saveConfig}>Simpan Konfigurasi</button>
+            <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '20px'}}>
+              <button 
+                className="btn btn-primary" 
+                onClick={saveConfig}
+                style={{
+                  padding: '12px 28px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
+                  borderRadius: '30px'
+                }}
+              >
+                Simpan Konfigurasi
+              </button>
             </div>
           </div>
         )}
