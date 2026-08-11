@@ -181,11 +181,6 @@ function App() {
       showToast("Judul Dasar wajib diisi!", "error")
       return
     }
-    if (manualImages.length === 0) {
-      showToast("Harap tempel/unggah minimal 1 gambar referensi!", "error")
-      return
-    }
-    
     setIsAddingToQueue(true)
     const newItem = {
       id: 'q_' + Date.now(),
