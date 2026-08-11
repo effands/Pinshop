@@ -1,6 +1,18 @@
 import asyncio
 import sys
 
+# Force UTF-8 output encoding for Windows consoles to prevent charmap UnicodeEncodeError
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # Silence Windows asyncio ProactorEventLoop spamming WinError 10054 ConnectionResetError
 if sys.platform == "win32":
     try:
@@ -62,7 +74,13 @@ def send_log(message: str):
         formatted = f"[{now}] {message}"
     else:
         formatted = message
-    print(formatted)
+    try:
+        print(formatted)
+    except Exception:
+        try:
+            print(formatted.encode("ascii", "replace").decode("ascii"))
+        except Exception:
+            pass
     # create task to broadcast safely
     try:
         loop = asyncio.get_running_loop()
