@@ -665,6 +665,71 @@ function App() {
                     }} 
                   />
                 </div>
+
+                <div className="form-group" style={{flex: '1 1 150px'}}>
+                  <label>Ratio Gambar (FOTO)</label>
+                  <select 
+                    className="form-control" 
+                    value={config.imageRatio || '9:16'} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setConfig({...config, imageRatio: val});
+                      fetch(`${API_BASE}/api/save-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...config, imageRatio: val})
+                      });
+                    }}
+                  >
+                    <option value="16:9">16:9 (Landscape)</option>
+                    <option value="4:3">4:3 (Standard)</option>
+                    <option value="1:1">1:1 (Square)</option>
+                    <option value="3:4">3:4 (Vertical)</option>
+                    <option value="9:16">9:16 (Pinterest/TikTok Reel)</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{flex: '1 1 150px'}}>
+                  <label>Ratio Video (VIDEO)</label>
+                  <select 
+                    className="form-control" 
+                    value={config.videoRatio || '9:16'} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setConfig({...config, videoRatio: val});
+                      fetch(`${API_BASE}/api/save-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...config, videoRatio: val})
+                      });
+                    }}
+                  >
+                    <option value="9:16">9:16 (Vertical)</option>
+                    <option value="16:9">16:9 (Landscape)</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{flex: '1 1 150px'}}>
+                  <label>Durasi Video (VIDEO)</label>
+                  <select 
+                    className="form-control" 
+                    value={config.videoDuration || '10s'} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setConfig({...config, videoDuration: val});
+                      fetch(`${API_BASE}/api/save-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...config, videoDuration: val})
+                      });
+                    }}
+                  >
+                    <option value="4s">4 detik</option>
+                    <option value="6s">6 detik</option>
+                    <option value="8s">8 detik</option>
+                    <option value="10s">10 detik</option>
+                  </select>
+                </div>
               </div>
             </div>
 
