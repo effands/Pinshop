@@ -156,9 +156,10 @@ async def autopilot_loop(logger_func):
                 result_path = "storage/generated.mp4"
                 await download_video(bridge, video_id, result_path)
             else:
-                logger_func("> Mengirim prompt ke Google Flow ImageFX AI...")
+                generate_count = int(config.get("generateCount", 1))
+                logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI ({generate_count}x)...")
                 ref_media_ids = [ref_media_id] if ref_media_id else None
-                results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=1, ref_media_ids=ref_media_ids)
+                results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=generate_count, ref_media_ids=ref_media_ids)
                 
                 if not results:
                     logger_func("[Error] Gagal merender gambar dari Flow.")

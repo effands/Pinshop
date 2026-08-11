@@ -63,6 +63,7 @@ function App() {
     stopTime: '',
     targetPost: 0,
     mediaType: 'image',
+    generateCount: 1,
     spintaxLinks: '',
     geminiApiKeys: '',
     masterPrompt: '',
@@ -450,7 +451,7 @@ function App() {
                   <label>Jam Berhenti</label>
                   <input type="time" className="form-control" value={config.stopTime} onChange={e => setConfig({...config, stopTime: e.target.value})} />
                 </div>
-                <div className="form-group" style={{flex: '1 1 150px'}}>
+                 <div className="form-group" style={{flex: '1 1 150px'}}>
                   <label>Tipe Media (Google Flow)</label>
                   <div className="radio-group">
                     <label className="radio-label">
@@ -460,6 +461,27 @@ function App() {
                       <input type="radio" name="mediaType" value="video" checked={config.mediaType === 'video'} onChange={e => setConfig({...config, mediaType: e.target.value})} /> Video
                     </label>
                   </div>
+                </div>
+                <div className="form-group" style={{flex: '1 1 150px'}}>
+                  <label>Jumlah Gambar (FOTO)</label>
+                  <select 
+                    className="form-control" 
+                    value={config.generateCount || 1} 
+                    onChange={e => {
+                      const val = parseInt(e.target.value);
+                      setConfig({...config, generateCount: val});
+                      fetch(`${API_BASE}/api/save-config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...config, generateCount: val})
+                      });
+                    }}
+                  >
+                    <option value={1}>1 Gambar (1x)</option>
+                    <option value={2}>2 Gambar (2x)</option>
+                    <option value={3}>3 Gambar (3x)</option>
+                    <option value={4}>4 Gambar (4x)</option>
+                  </select>
                 </div>
               </div>
             </div>
