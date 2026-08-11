@@ -110,7 +110,10 @@ function App() {
       basicTitle: manualBasicTitle,
       spintaxLinks: config.spintaxLinks || "",
       referenceImages: manualImages,
-      status: "pending"
+      status: "pending",
+      seoTitle: config.seoTitle || null,
+      seoDesc: config.seoDesc || null,
+      masterPrompt: config.masterPrompt || null
     }
     
     try {
@@ -123,9 +126,15 @@ function App() {
       if (data.success) {
         showToast("Item berhasil ditambahkan ke Antrean!", "success")
         fetchQueue()
-        // Clear input inputs so the user can quickly add more products
+        // Clear input inputs and config textareas so the user can quickly add more products
         setManualBasicTitle('')
         setManualImages([])
+        setConfig(prev => ({
+          ...prev,
+          seoTitle: '',
+          seoDesc: '',
+          masterPrompt: ''
+        }))
       } else {
         showToast("Gagal menambahkan ke antrean", "error")
       }
