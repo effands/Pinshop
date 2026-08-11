@@ -145,7 +145,7 @@ WAJIB DAN MUTLAK: Seluruh teks output (seo_title, seo_desc, master_prompt) HARUS
 
 Tugas spesifik:
 1. Buat "seo_title": Judul Clickbait Pinterest yang kaya variasi kata kunci dalam format Spintax. Contoh: "{{Spill|Bocoran|Rekomendasi}} {{Meja Kerja|Meja Komputer}} {{Minimalis|Aesthetic|Modern}}".
-2. Buat "seo_desc": Deskripsi persuasif (min 2 paragraf) berisi kata kunci, ditulis menggunakan Spintax di setiap kalimat agar teksnya dinamis, dan sertakan maks 5 hashtag di akhir. Contoh: "{{Ubah|Dekorasi|Tingkatkan}} tampilan {{ruang kerja|kamar tidur} Anda dengan...".
+2. Buat "seo_desc": Deskripsi persuasif (min 2 paragraf) berisi kata kunci, ditulis menggunakan Spintax di setiap kalimat agar teksnya dinamis, dan sertakan maks 5 hashtag di akhir. Contoh: "{{Ubah|Dekorasi|Tingkatkan}} tampilan {{ruang kerja|kamar tidur}} Anda dengan...".
 3. Buat "master_prompt": SATU prompt bahasa Inggris utuh untuk AI Image Generator (Midjourney/ImageFX) yang mendeskripsikan subjek, detail, background, dan pencahayaan, ditulis menggunakan Spintax pada elemen visual utamanya (DILARANG keras menggunakan flag/parameter seperti --ar 9:16 atau 9:16). Contoh: "{{minimalist wooden desk|modern industrial desk}} with {{black metal frame|solid steel legs}} in a {{cozy apartment|sunlit home office}}...".
 
 Format HANYA JSON:
