@@ -466,7 +466,7 @@ function App() {
               <h3><Settings size={20} /> Jadwal Operasional Pintar</h3>
               <div style={{display: 'flex', gap: '20px', flexWrap: 'wrap'}}>
                 <div className="form-group" style={{flex: '1 1 200px'}}>
-                  <label style={{color: 'var(--primary)', fontWeight: 'bold'}}>Akun Pinterest Target (Utama)</label>
+                  <label style={{color: 'var(--primary)', fontWeight: 'bold'}}>Pilih Akun</label>
                   <select 
                     className="form-control" 
                     style={{borderColor: 'var(--primary)', borderWidth: '2px'}}
@@ -488,7 +488,7 @@ function App() {
                   <input type="time" className="form-control" value={config.stopTime} onChange={e => setConfig({...config, stopTime: e.target.value})} />
                 </div>
                  <div className="form-group" style={{flex: '1 1 150px'}}>
-                  <label>Tipe Media (Google Flow)</label>
+                  <label>Type Media</label>
                   <div className="radio-group">
                     <label className="radio-label">
                       <input type="radio" name="mediaType" value="image" checked={config.mediaType === 'image'} onChange={e => setConfig({...config, mediaType: e.target.value})} /> Foto
