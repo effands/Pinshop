@@ -45,6 +45,11 @@ async def autopilot_loop(logger_func):
             prompt = re.sub(r'--[a-zA-Z0-9]+(\s+[^\s]+)?', '', raw_prompt).strip()
             if not prompt:
                 prompt = raw_prompt
+                
+            if not prompt or prompt.strip(".") == "":
+                logger_func("[Warning] Master Prompt masih kosong atau tidak valid! Harap isi/generate Master Prompt terlebih dahulu di tab Studio.")
+                await asyncio.sleep(15)
+                continue
             
             link = get_random_line(config.get("spintaxLinks", ""))
             media_type = config.get("mediaType", "image")
