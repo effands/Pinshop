@@ -399,14 +399,14 @@ function App() {
 
                     const getLogColor = (text) => {
                       const t = text.toLowerCase()
-                      if (t.includes('merender') || t.includes('standby')) return '#ffb703' // amber/orange
-                      if (t.includes('download') || t.includes('berhasil') || t.includes('sukses') || t.includes('terbit')) return '#06d6a0' // teal green
-                      if (t.includes('error') || t.includes('gagal') || t.includes('crash')) return '#ef4444' // red
-                      if (t.includes('warning')) return '#f59e0b' // yellow
-                      if (t.includes('google flow') || t.includes('project id')) return '#38bdf8' // bright cyan
-                      if (t.includes('sleep engine') || t.includes('menyuntikkan') || t.includes('mengupload') || t.includes('generate judul') || t.includes('watermark') || t.includes('checking schedule')) return '#00b4d8' // sky blue
-                      if (t.includes('[system]')) return '#60a5fa' // soft blue
-                      return '#94a3b8' // soft slate
+                      if (t.includes('merender') || t.includes('standby')) return '#d97706' // rich amber
+                      if (t.includes('download') || t.includes('berhasil') || t.includes('sukses') || t.includes('terbit')) return '#059669' // emerald green
+                      if (t.includes('error') || t.includes('gagal') || t.includes('crash')) return '#dc2626' // vivid red
+                      if (t.includes('warning')) return '#d97706' // amber
+                      if (t.includes('google flow') || t.includes('project id')) return '#0284c7' // cyan blue
+                      if (t.includes('sleep engine') || t.includes('menyuntikkan') || t.includes('mengupload') || t.includes('generate judul') || t.includes('watermark') || t.includes('checking schedule')) return '#0284c7' // sky blue
+                      if (t.includes('[system]')) return '#2563eb' // royal blue
+                      return '#334155' // dark slate
                     }
 
                     return (

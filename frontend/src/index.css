@@ -283,23 +283,27 @@ textarea.form-control {
   color: #fff;
 }
 
-/* Terminal Log Activity - Affilia Mac Style */
+/* Terminal Log Activity - Affilia Mac Style with Light Nebula Glassmorphism */
 .terminal-card {
-  background: #020713;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(67, 97, 238, 0.25);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 36px rgba(31, 38, 135, 0.08);
   font-family: 'Consolas', 'Courier New', monospace;
 }
 
 .terminal-header {
-  background: #070d1e;
-  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #131d31;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.15);
 }
 
 .terminal-dots {
@@ -313,6 +317,7 @@ textarea.form-control {
   height: 12px;
   border-radius: 50%;
   display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
 .dot-red { background: #ff5f56; }
@@ -320,19 +325,20 @@ textarea.form-control {
 .dot-green { background: #27c93f; }
 
 .terminal-title {
-  color: #94a3b8;
+  color: #334155;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .terminal-clear-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  padding: 4px 10px;
-  border-radius: 6px;
+  background: rgba(67, 97, 238, 0.08);
+  border: 1px solid rgba(67, 97, 238, 0.2);
+  color: #334155;
+  padding: 5px 12px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -341,34 +347,36 @@ textarea.form-control {
 }
 
 .terminal-clear-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  color: #f87171;
+  background: rgba(67, 97, 238, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .terminal-body {
-  padding: 18px 20px;
+  padding: 20px 24px;
   height: 65vh;
   overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.7;
+  font-size: 13.5px;
+  line-height: 1.8;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .terminal-row {
   margin-bottom: 4px;
   word-break: break-word;
   white-space: pre-wrap;
+  font-weight: 500;
 }
 
 .terminal-time {
-  color: #4a5a70;
+  color: #64748b;
   margin-right: 12px;
-  font-weight: 500;
+  font-weight: 600;
   user-select: none;
 }
 
 .terminal-empty {
-  color: #4a5a70;
+  color: #94a3b8;
   text-align: center;
   margin-top: 15vh;
   font-style: italic;
