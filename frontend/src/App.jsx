@@ -1357,7 +1357,7 @@ function App() {
                     <button 
                       type="button"
                       className="btn btn-outline" 
-                      style={{padding: '6px 16px', fontSize: '13px'}}
+                      style={{padding: '10px 20px', fontSize: '13px'}}
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
@@ -1371,7 +1371,7 @@ function App() {
                       <button 
                         type="button"
                         className="btn btn-danger" 
-                        style={{padding: '6px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px'}}
+                        style={{padding: '10px 20px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px'}}
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -1387,7 +1387,7 @@ function App() {
                 <button 
                   type="button"
                   className="btn btn-outline" 
-                  style={{padding: '6px 16px', fontSize: '13px'}} 
+                  style={{padding: '10px 20px', fontSize: '13px'}} 
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
