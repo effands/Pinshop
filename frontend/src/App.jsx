@@ -354,21 +354,56 @@ function App() {
       {/* Main Content Area */}
       <div className="content-area">
         {activeTab === 'activity' && (
-          <div className="panel">
-            <h3><LayoutDashboard size={20} /> Activity Log</h3>
-            <div className="terminal">
-              {logs.length === 0 ? (
-                <div style={{color: 'var(--text-muted)', textAlign: 'center', marginTop: '10vh'}}>
-                  Sistem dalam keadaan standby. Log akan muncul di sini saat berjalan.
+          <div>
+            <div className="terminal-card">
+              <div className="terminal-header">
+                <div className="terminal-dots">
+                  <span className="dot dot-red"></span>
+                  <span className="dot dot-yellow"></span>
+                  <span className="dot dot-green"></span>
                 </div>
-              ) : (
-                logs.map((log, i) => (
-                  <div key={i} className="log-line">
-                    <span className="log-arrow">&rarr;</span> {log}
+                <div className="terminal-title">live_engine_logs.sh</div>
+                <button className="terminal-clear-btn" onClick={() => setLogs([])} title="Hapus Log">
+                  <Trash2 size={13} /> Clear
+                </button>
+              </div>
+              <div className="terminal-body">
+                {logs.length === 0 ? (
+                  <div className="terminal-empty">
+                    Sistem dalam keadaan standby. Log akan muncul di sini saat berjalan.
                   </div>
-                ))
-              )}
-              <div ref={logsEndRef} />
+                ) : (
+                  logs.map((log, i) => {
+                    const match = log.match(/^(\[\d{2}:\d{2}:\d{2}\])\s*(.*)$/)
+                    let time = ''
+                    let rest = log
+                    if (match) {
+                      time = match[1]
+                      rest = match[2]
+                    }
+
+                    const getLogColor = (text) => {
+                      const t = text.toLowerCase()
+                      if (t.includes('merender') || t.includes('standby')) return '#ffb703' // amber/orange
+                      if (t.includes('download') || t.includes('berhasil') || t.includes('sukses') || t.includes('terbit')) return '#06d6a0' // teal green
+                      if (t.includes('error') || t.includes('gagal') || t.includes('crash')) return '#ef4444' // red
+                      if (t.includes('warning')) return '#f59e0b' // yellow
+                      if (t.includes('google flow') || t.includes('project id')) return '#38bdf8' // bright cyan
+                      if (t.includes('sleep engine') || t.includes('menyuntikkan') || t.includes('mengupload') || t.includes('generate judul') || t.includes('watermark') || t.includes('checking schedule')) return '#00b4d8' // sky blue
+                      if (t.includes('[system]')) return '#60a5fa' // soft blue
+                      return '#94a3b8' // soft slate
+                    }
+
+                    return (
+                      <div key={i} className="terminal-row">
+                        {time && <span className="terminal-time">{time}</span>}
+                        <span style={{ color: getLogColor(rest) }}>{rest}</span>
+                      </div>
+                    )
+                  })
+                )}
+                <div ref={logsEndRef} />
+              </div>
             </div>
           </div>
         )}
