@@ -500,24 +500,22 @@ function App() {
                 </div>
                 <div className="form-group" style={{flex: '1 1 150px'}}>
                   <label>Jumlah Gambar (FOTO)</label>
-                  <select 
+                  <input 
+                    type="number" 
                     className="form-control" 
+                    min="1"
+                    max="1000"
                     value={config.generateCount || 1} 
                     onChange={e => {
-                      const val = parseInt(e.target.value);
+                      const val = parseInt(e.target.value) || 1;
                       setConfig({...config, generateCount: val});
                       fetch(`${API_BASE}/api/save-config`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({...config, generateCount: val})
                       });
-                    }}
-                  >
-                    <option value={1}>1 Gambar (1x)</option>
-                    <option value={2}>2 Gambar (2x)</option>
-                    <option value={3}>3 Gambar (3x)</option>
-                    <option value={4}>4 Gambar (4x)</option>
-                  </select>
+                    }} 
+                  />
                 </div>
                  <div className="form-group" style={{flex: '1 1 150px'}}>
                   <label>Jeda Posting (Detik)</label>
@@ -766,24 +764,22 @@ function App() {
 
                   <div className="form-group" style={{margin: 0}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Jumlah Gambar (Google Flow)</label>
-                    <select 
+                    <input 
+                      type="number" 
                       className="form-control" 
+                      min="1"
+                      max="1000"
                       value={config.generateCount || 1} 
                       onChange={e => {
-                        const val = parseInt(e.target.value);
+                        const val = parseInt(e.target.value) || 1;
                         setConfig({...config, generateCount: val});
                         fetch(`${API_BASE}/api/save-config`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({...config, generateCount: val})
                         });
-                      }}
-                    >
-                      <option value={1}>1 Gambar (1x)</option>
-                      <option value={2}>2 Gambar (2x)</option>
-                      <option value={3}>3 Gambar (3x)</option>
-                      <option value={4}>4 Gambar (4x)</option>
-                    </select>
+                      }} 
+                    />
                   </div>
                 </div>
 

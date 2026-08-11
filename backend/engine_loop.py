@@ -162,15 +162,32 @@ async def autopilot_loop(logger_func):
                 media_files = [{"type": "video", "item": results[0]}]
             else:
                 generate_count = int(config.get("generateCount", 1))
-                logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI ({generate_count}x)...")
+                logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI (Total target: {generate_count}x)...")
                 ref_media_ids = [ref_media_id] if ref_media_id else None
-                results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=generate_count, ref_media_ids=ref_media_ids)
+                
+                results = []
+                remaining = generate_count
+                batch_idx = 1
+                while remaining > 0:
+                    current_batch = min(4, remaining)
+                    logger_func(f"> Mengirim batch ke-{batch_idx} ({current_batch} gambar) ke Google Flow...")
+                    batch_results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=current_batch, ref_media_ids=ref_media_ids)
+                    if batch_results:
+                        results.extend(batch_results)
+                        logger_func(f"  Batch ke-{batch_idx} sukses. Total terkumpul: {len(results)} gambar.")
+                    else:
+                        logger_func(f"[Warning] Batch ke-{batch_idx} gagal merender.")
+                    
+                    remaining -= current_batch
+                    batch_idx += 1
+                    if remaining > 0:
+                        await asyncio.sleep(2) # Small safety delay between batches
                 
                 if not results:
-                    logger_func("[Error] Gagal merender gambar dari Flow.")
+                    logger_func("[Error] Gagal merender gambar sama sekali dari Flow.")
                     await asyncio.sleep(30)
                     continue
-                logger_func("> Gambar berhasil dirender oleh Google Flow!")
+                logger_func(f"> Total {len(results)} gambar berhasil dirender oleh Google Flow!")
                 media_files = [{"type": "image", "item": r} for r in results]
 
             # Target Account
