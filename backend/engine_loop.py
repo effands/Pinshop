@@ -74,17 +74,38 @@ async def autopilot_loop(logger_func):
             if reference_images and len(reference_images) > 0:
                 logger_func("> Mengupload gambar referensi ke Google Flow...")
                 os.makedirs("storage", exist_ok=True)
-                ref_path = "storage/temp_ref.png"
+                ref_path = "storage/temp_ref.jpg"
                 img_data = reference_images[0]
                 if "," in img_data:
                     img_data = img_data.split(",", 1)[1]
-                with open(ref_path, "wb") as f:
-                    f.write(base64.b64decode(img_data))
-                ref_media_id = await upload_image(bridge, ref_path, project_id)
-                if ref_media_id:
-                    logger_func("> Gambar referensi berhasil diupload.")
-                else:
-                    logger_func("[Warning] Gagal mengupload gambar referensi.")
+                
+                try:
+                    import io
+                    from PIL import Image
+                    raw_bytes = base64.b64decode(img_data)
+                    img = Image.open(io.BytesIO(raw_bytes))
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                    img.save(ref_path, "JPEG", quality=85)
+                except Exception as e:
+                    logger_func(f"[Warning] Gagal memproses gambar: {e}")
+                    # Fallback to direct save
+                    ref_path = "storage/temp_ref.png"
+                    with open(ref_path, "wb") as f:
+                        f.write(base64.b64decode(img_data))
+                
+                try:
+                    # upload_image might timeout after 45s if ws is stuck
+                    ref_media_id = await upload_image(bridge, ref_path, project_id)
+                    if ref_media_id:
+                        logger_func("> Gambar referensi berhasil diupload.")
+                    else:
+                        logger_func("[Warning] Gagal mengupload gambar referensi (Result Kosong).")
+                except Exception as e:
+                    logger_func(f"[Error] Upload gambar referensi gagal/timeout: {e}")
+                    # Lanjut tanpa reference image
+                    ref_media_id = None
 
             if media_type == "video":
                 logger_func("> Meminta Google Flow merender VIDEO Mahakarya HD...")
