@@ -12,7 +12,7 @@ STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 HOST = os.environ.get("PINSHOP_HOST", "127.0.0.1")
-PORT = int(os.environ.get("PINSHOP_PORT", "8001"))
+PORT = int(os.environ.get("PINSHOP_PORT", "8015"))
 
 def get_flow_extension_instance_id() -> str:
     # Optional logic to pick extension instance if running multiple profiles.

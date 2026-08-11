@@ -7,7 +7,7 @@
 
 importScripts('auth-retry.js', 'flow-credit.js');
 
-const AGENT_WS_URL = 'ws://127.0.0.1:8001/ws';
+const AGENT_WS_URL = 'ws://127.0.0.1:8015/ws';
 let callbackUrl = 'http://127.0.0.1:3001/api/ext/callback';
 // NOTE: This is a browser-restricted public API key — safe to ship in extension bundles.
 const API_KEY = 'AIzaSyBtrm0o5ab1c-Ec8ZuLcGt3oJAA5VWt3pY';
@@ -1028,7 +1028,7 @@ chrome.runtime.onMessage.addListener((msg, _, reply) => {
 
   if (msg.type === 'SNIFFED_AISANDBOX_REQUEST') {
     console.log('[Flow Agent] SNIFFED aisandbox request:', msg.url);
-    fetch('http://127.0.0.1:8001/api/ext/callback', {
+    fetch('http://127.0.0.1:8015/api/ext/callback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

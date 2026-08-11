@@ -14,8 +14,8 @@
     "https://aisandbox-pa.googleapis.com/*",
     "https://aisandbox-pa.sandbox.googleapis.com/*",
     "https://storage.googleapis.com/*",
-    "http://127.0.0.1:8001/*",
-    "http://localhost:8001/*",
+    "http://127.0.0.1:8015/*",
+    "http://localhost:8015/*",
     "<all_urls>"
   ],
   "background": {
