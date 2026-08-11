@@ -361,16 +361,30 @@ function App() {
           <div>
             <div className="panel">
               <h3><Settings size={20} /> Jadwal Operasional Pintar</h3>
-              <div className="grid-3">
-                <div className="form-group">
+              <div style={{display: 'flex', gap: '20px', flexWrap: 'wrap'}}>
+                <div className="form-group" style={{flex: '1 1 200px'}}>
+                  <label style={{color: 'var(--primary)', fontWeight: 'bold'}}>Akun Pinterest Target (Utama)</label>
+                  <select 
+                    className="form-control" 
+                    style={{borderColor: 'var(--primary)', borderWidth: '2px'}}
+                    value={config.targetAccount || ''} 
+                    onChange={e => setConfig({...config, targetAccount: e.target.value})}
+                  >
+                    <option value="">Pilih Akun...</option>
+                    {accountsList.filter(a => a.status === 'valid').map((acc, i) => (
+                      <option key={i} value={acc.name}>{acc.name} (Valid)</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{flex: '1 1 120px'}}>
                   <label>Jam Mulai</label>
                   <input type="time" className="form-control" value={config.startTime} onChange={e => setConfig({...config, startTime: e.target.value})} />
                 </div>
-                <div className="form-group">
+                <div className="form-group" style={{flex: '1 1 120px'}}>
                   <label>Jam Berhenti</label>
                   <input type="time" className="form-control" value={config.stopTime} onChange={e => setConfig({...config, stopTime: e.target.value})} />
                 </div>
-                <div className="form-group">
+                <div className="form-group" style={{flex: '1 1 150px'}}>
                   <label>Tipe Media (Google Flow)</label>
                   <div className="radio-group">
                     <label className="radio-label">
@@ -380,20 +394,6 @@ function App() {
                       <input type="radio" name="mediaType" value="video" checked={config.mediaType === 'video'} onChange={e => setConfig({...config, mediaType: e.target.value})} /> Video
                     </label>
                   </div>
-                </div>
-                <div className="form-group">
-                  <label>Akun Pinterest Target</label>
-                  <select 
-                    className="form-control" 
-                    value={config.targetAccount || ''} 
-                    onChange={e => setConfig({...config, targetAccount: e.target.value})}
-                  >
-                    <option value="">Pilih Akun...</option>
-                    {accountsList.filter(a => a.status === 'valid').map((acc, i) => (
-                      <option key={i} value={acc.name}>{acc.name} (Valid)</option>
-                    ))}
-                  </select>
-                  <small style={{color: 'var(--text-muted)'}}>Akun yang akan digunakan saat Autopilot (Upload).</small>
                 </div>
               </div>
             </div>
@@ -544,6 +544,7 @@ function App() {
                     border: '2px dashed var(--primary)', 
                     borderRadius: '8px', 
                     display: 'flex', 
+                    flexDirection: 'column',
                     alignItems: 'center', 
                     justifyContent: 'center', 
                     position: 'relative',
@@ -556,16 +557,38 @@ function App() {
                   {manualImages.length > 0 ? (
                     <div style={{display: 'flex', gap: '8px', overflowX: 'auto', width: '100%', height: '100%', alignItems: 'center'}}>
                       {manualImages.map((img, idx) => (
-                        <img key={idx} src={img} alt={`Ref ${idx}`} style={{height: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)'}} />
+                        <div key={idx} style={{position: 'relative', height: '100%', flexShrink: 0}}>
+                          <img src={img} alt={`Ref ${idx}`} style={{height: '100%', objectFit: 'contain', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)'}} />
+                          <button 
+                            onClick={() => {
+                              const newImgs = [...manualImages];
+                              newImgs.splice(idx, 1);
+                              setManualImages(newImgs);
+                            }}
+                            style={{position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px'}}
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
+                      <div 
+                        onClick={() => document.getElementById('hiddenFileInput').click()} 
+                        style={{height: '100%', minWidth: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(255,255,255,0.3)', borderRadius: '4px', cursor: 'pointer', flexShrink: 0}}
+                        title="Tambah Foto"
+                      >
+                        <UploadCloud size={20} opacity={0.6} />
+                      </div>
                     </div>
                   ) : (
-                    <div style={{textAlign: 'center', padding: '10px', color: 'var(--text-muted)'}}>
+                    <div 
+                      onClick={() => document.getElementById('hiddenFileInput').click()} 
+                      style={{textAlign: 'center', padding: '10px', color: 'var(--text-muted)', cursor: 'pointer', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}
+                    >
                       <UploadCloud size={32} style={{marginBottom: '8px', opacity: 0.5}} />
-                      <p style={{fontSize: '13px'}}>Paste (Ctrl+V) / Pilih banyak foto referensi</p>
+                      <p style={{fontSize: '13px'}}>Klik atau Paste (Ctrl+V) banyak foto di sini</p>
                     </div>
                   )}
-                  <input type="file" multiple accept="image/*" style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer'}} onChange={handleManualFile} />
+                  <input id="hiddenFileInput" type="file" multiple accept="image/*" style={{display: 'none'}} onChange={handleManualFile} />
                 </div>
                 
                 <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px'}}>
