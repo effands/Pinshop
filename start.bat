@@ -13,6 +13,40 @@ echo ====================================================
 echo        PINSHOP EDITION - AUTO PINTEREST PIN
 echo ====================================================
 echo.
+
+REM 1. Check Python Installation
+where python >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Python tidak ditemukan di sistem Anda!
+    echo Harap install Python 3.10 atau versi di atasnya.
+    echo WAJIB centang "Add Python to PATH" saat menginstall.
+    echo Download: https://www.python.org/downloads/
+    echo.
+    pause
+    exit /b
+)
+
+REM 2. Check Node.js / NPM Installation
+where npm >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] Node.js / NPM tidak ditemukan di sistem Anda!
+    echo Harap install Node.js terlebih dahulu untuk menjalankan Frontend.
+    echo Download: https://nodejs.org/ (Pilih versi LTS)
+    echo.
+    pause
+    exit /b
+)
+
+REM 3. Check for GitHub Updates
+where git >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [System] Mengecek update terbaru dari GitHub...
+    git pull origin main
+) else (
+    echo [System] Git tidak terdeteksi. Melewati pengecekan update otomatis dari GitHub.
+)
+echo.
+
 REM Check if Python venv exists
 if not exist ".venv" (
     echo [System] Virtual environment tidak ditemukan. Membuat .venv...
@@ -20,7 +54,8 @@ if not exist ".venv" (
     
     echo [System] Menginstall kebutuhan Backend Harap tunggu...
     call .venv\Scripts\activate
-    pip install fastapi uvicorn playwright websockets pydantic requests google-generativeai
+    python -m pip install --upgrade pip
+    pip install fastapi uvicorn playwright websockets pydantic requests google-generativeai Pillow
     playwright install chromium
 ) else (
     echo [System] Virtual environment ditemukan.
