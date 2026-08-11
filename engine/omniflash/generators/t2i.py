@@ -33,28 +33,41 @@ def _parse_image_results(data: dict) -> list[dict]:
     """
     results = []
     media_list = data.get("media", [])
+    if isinstance(media_list, dict):
+        media_list = [media_list]
 
     for item in media_list:
+        if not isinstance(item, dict):
+            continue
         r = {"media_id": "", "image_url": ""}
 
         # media[i].name = mediaId
-        name = item.get("name", "")
-        if UUID_RE.match(name):
+        name = item.get("name", "") or item.get("mediaId", "") or item.get("id", "")
+        if name:
             r["media_id"] = name
 
         # media[i].image.generatedImage.fifeUrl
-        img = item.get("image", {})
-        gen = img.get("generatedImage", {})
-        url = gen.get("fifeUrl", "") or gen.get("imageUri", "")
-        if url:
-            r["image_url"] = url
-            # Fallback: extract mediaId from URL
-            if not r["media_id"]:
-                match = UUID_RE.search(url)
-                if match:
-                    r["media_id"] = match.group()
+        img = item.get("image") or item.get("media") or item
+        if isinstance(img, dict):
+            gen = img.get("generatedImage") or img.get("image") or img
+            if isinstance(gen, dict):
+                url = (
+                    gen.get("fifeUrl")
+                    or gen.get("imageUri")
+                    or gen.get("url")
+                    or gen.get("downloadUrl")
+                    or gen.get("mediaUrl")
+                )
+                if url:
+                    r["image_url"] = str(url)
 
-        results.append(r)
+        if not r["image_url"]:
+            url = item.get("fifeUrl") or item.get("imageUri") or item.get("url")
+            if url:
+                r["image_url"] = str(url)
+
+        if r["image_url"] or r["media_id"]:
+            results.append(r)
 
     return results
 
