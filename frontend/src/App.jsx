@@ -1253,29 +1253,31 @@ function App() {
                       />
                     </div>
                     
-                    <div>
-                      <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE SHOPEE</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder="Link affiliate Shopee..." 
-                        style={{width: '100%', boxSizing: 'border-box'}}
-                        value={bulkShopeeLink}
-                        onChange={e => setBulkShopeeLink(e.target.value)}
-                      />
-                    </div>
+                    <div style={{display: 'flex', gap: '16px'}}>
+                      <div style={{flex: 3}}>
+                        <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE SHOPEE</label>
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          placeholder="Link affiliate Shopee..." 
+                          style={{width: '100%', boxSizing: 'border-box'}}
+                          value={bulkShopeeLink}
+                          onChange={e => setBulkShopeeLink(e.target.value)}
+                        />
+                      </div>
 
-                    <div>
-                      <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUMLAH POSTINGAN YANG DI-GENERATE</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="20" 
-                        className="form-control" 
-                        style={{width: '100%', boxSizing: 'border-box'}}
-                        value={bulkCount}
-                        onChange={e => setBulkCount(parseInt(e.target.value) || 5)}
-                      />
+                      <div style={{flex: 1}}>
+                        <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', whiteSpace: 'nowrap'}}>JUMLAH POSTINGAN</label>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          max="20" 
+                          className="form-control" 
+                          style={{width: '100%', boxSizing: 'border-box'}}
+                          value={bulkCount}
+                          onChange={e => setBulkCount(parseInt(e.target.value) || 5)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
