@@ -34,6 +34,7 @@ function App() {
   }
   
   const [galleryFiles, setGalleryFiles] = useState([])
+  const [selectedGalleryItems, setSelectedGalleryItems] = useState([])
   const [isLoadingGallery, setIsLoadingGallery] = useState(false)
 
   const [copiedField, setCopiedField] = useState(null)
@@ -51,6 +52,7 @@ function App() {
 
   const fetchGallery = async () => {
     setIsLoadingGallery(true)
+    setSelectedGalleryItems([]) // Reset selection on refresh/reload
     try {
       const res = await fetch(`${API_BASE}/gallery`)
       const data = await res.json()
@@ -61,6 +63,47 @@ function App() {
       console.error(e)
     }
     setIsLoadingGallery(false)
+  }
+
+  const toggleSelectGalleryItem = (filename) => {
+    setSelectedGalleryItems(prev => {
+      if (prev.includes(filename)) {
+        return prev.filter(f => f !== filename)
+      } else {
+        return [...prev, filename]
+      }
+    })
+  }
+
+  const selectAllGalleryItems = () => {
+    if (selectedGalleryItems.length === galleryFiles.length) {
+      setSelectedGalleryItems([])
+    } else {
+      setSelectedGalleryItems(galleryFiles.map(f => f.filename))
+    }
+  }
+
+  const deleteSelectedGalleryItems = async () => {
+    if (selectedGalleryItems.length === 0) return
+    if (!confirm(`Hapus ${selectedGalleryItems.length} item terpilih dari Gallery?`)) return
+    
+    try {
+      const res = await fetch(`${API_BASE}/gallery/delete-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filenames: selectedGalleryItems })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast(`${data.deleted} item berhasil dihapus`, 'success')
+        setSelectedGalleryItems([])
+        fetchGallery()
+      } else {
+        showToast('Gagal menghapus item', 'error')
+      }
+    } catch (e) {
+      showToast('Error koneksi', 'error')
+    }
   }
 
   const deleteGalleryItem = async (filename) => {
@@ -1264,11 +1307,36 @@ function App() {
 
         {activeTab === 'gallery' && (
           <div>
-            <div className="panel" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+            <div className="panel" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px'}}>
               <h3 style={{margin: 0}}>🎨 Gallery Hasil Render ({galleryFiles.length} item)</h3>
-              <button className="btn btn-outline" style={{padding: '6px 16px', fontSize: '13px'}} onClick={fetchGallery} disabled={isLoadingGallery}>
-                <RefreshCw size={14} className={isLoadingGallery ? "spin" : ""} /> Refresh Gallery
-              </button>
+              
+              <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                {galleryFiles.length > 0 && (
+                  <>
+                    <button 
+                      className="btn btn-outline" 
+                      style={{padding: '6px 16px', fontSize: '13px', borderColor: 'var(--primary)', color: 'var(--primary)'}}
+                      onClick={selectAllGalleryItems}
+                    >
+                      {selectedGalleryItems.length === galleryFiles.length ? 'Batal Pilih' : 'Pilih Semua'}
+                    </button>
+                    
+                    {selectedGalleryItems.length > 0 && (
+                      <button 
+                        className="btn btn-danger" 
+                        style={{padding: '6px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px'}}
+                        onClick={deleteSelectedGalleryItems}
+                      >
+                        <Trash2 size={14} /> Hapus Terpilih ({selectedGalleryItems.length})
+                      </button>
+                    )}
+                  </>
+                )}
+                
+                <button className="btn btn-outline" style={{padding: '6px 16px', fontSize: '13px'}} onClick={fetchGallery} disabled={isLoadingGallery}>
+                  <RefreshCw size={14} className={isLoadingGallery ? "spin" : ""} /> Refresh Gallery
+                </button>
+              </div>
             </div>
             
             {galleryFiles.length === 0 ? (
@@ -1294,8 +1362,9 @@ function App() {
                     overflow: 'hidden',
                     background: 'var(--panel-bg)',
                     borderRadius: '16px',
-                    border: '1px solid var(--panel-border)',
-                    boxShadow: 'var(--panel-shadow)'
+                    border: selectedGalleryItems.includes(file.filename) ? '1px solid var(--primary)' : '1px solid var(--panel-border)',
+                    boxShadow: selectedGalleryItems.includes(file.filename) ? '0 0 10px rgba(99, 102, 241, 0.15)' : 'var(--panel-shadow)',
+                    transition: 'all 0.2s ease'
                   }}>
                     <div style={{
                       width: '100%',
@@ -1308,6 +1377,23 @@ function App() {
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}>
+                      {/* Floating Checkbox */}
+                      <input 
+                        type="checkbox" 
+                        checked={selectedGalleryItems.includes(file.filename)}
+                        onChange={() => toggleSelectGalleryItem(file.filename)}
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          width: '18px',
+                          height: '18px',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                          accentColor: 'var(--primary)',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      />
                       {file.type === 'video' ? (
                         <video 
                           src={`http://127.0.0.1:8001${file.url}`} 

@@ -127,7 +127,6 @@ async def get_gallery():
 @app.delete("/api/gallery/{filename}")
 async def delete_gallery_item(filename: str):
     file_path = Path("storage/gallery") / filename
-    # Protect against directory traversal
     try:
         resolved_base = Path("storage/gallery").resolve()
         resolved_file = file_path.resolve()
@@ -140,6 +139,24 @@ async def delete_gallery_item(filename: str):
         file_path.unlink()
         return {"success": True}
     return {"success": False, "error": "File not found"}
+
+class DeleteBatchRequest(BaseModel):
+    filenames: List[str]
+
+@app.post("/api/gallery/delete-batch")
+async def delete_gallery_batch(req: DeleteBatchRequest):
+    success_count = 0
+    resolved_base = Path("storage/gallery").resolve()
+    for filename in req.filenames:
+        try:
+            file_path = Path("storage/gallery") / filename
+            resolved_file = file_path.resolve()
+            if resolved_file.is_relative_to(resolved_base) and file_path.exists():
+                file_path.unlink()
+                success_count += 1
+        except Exception:
+            pass
+    return {"success": True, "deleted": success_count}
 
 @app.websocket("/ws")
 async def extension_ws(websocket: WebSocket):
