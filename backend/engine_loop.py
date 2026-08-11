@@ -75,25 +75,34 @@ async def autopilot_loop(logger_func):
                 logger_func("> Mengupload gambar referensi ke Google Flow...")
                 os.makedirs("storage", exist_ok=True)
                 ref_path = "storage/temp_ref.jpg"
-                img_data = reference_images[0]
-                if "," in img_data:
-                    img_data = img_data.split(",", 1)[1]
-                
+                raw_item = reference_images[0]
                 try:
                     import io
                     from PIL import Image
-                    raw_bytes = base64.b64decode(img_data)
-                    img = Image.open(io.BytesIO(raw_bytes))
+                    import os
+                    from pathlib import Path
+                    
+                    if isinstance(raw_item, str) and (os.path.exists(raw_item) or Path(raw_item).exists()):
+                        img = Image.open(raw_item)
+                    elif isinstance(raw_item, str) and raw_item.startswith("http"):
+                        import urllib.request
+                        req = urllib.request.urlopen(raw_item)
+                        img = Image.open(io.BytesIO(req.read()))
+                    else:
+                        img_data = raw_item
+                        if "," in img_data:
+                            img_data = img_data.split(",", 1)[1]
+                        raw_bytes = base64.b64decode(img_data)
+                        img = Image.open(io.BytesIO(raw_bytes))
+                    
                     if img.mode != 'RGB':
                         img = img.convert('RGB')
                     img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
                     img.save(ref_path, "JPEG", quality=85)
                 except Exception as e:
                     logger_func(f"[Warning] Gagal memproses gambar: {e}")
-                    # Fallback to direct save
-                    ref_path = "storage/temp_ref.png"
-                    with open(ref_path, "wb") as f:
-                        f.write(base64.b64decode(img_data))
+                    if isinstance(raw_item, str) and os.path.exists(raw_item):
+                        ref_path = raw_item
                 
                 try:
                     # upload_image might timeout after 45s if ws is stuck
