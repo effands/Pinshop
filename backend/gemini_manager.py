@@ -100,14 +100,17 @@ Output HANYA JSON.
         if not self.keys:
             raise ValueError("Tidak ada Gemini API Key yang disetting.")
 
-        # Clean base64 header if present (e.g., data:image/png;base64,...)
-        mime_type = "image/jpeg"
-        if "," in image_base64:
-            header, image_base64 = image_base64.split(",", 1)
-            if "png" in header: mime_type = "image/png"
-            elif "webp" in header: mime_type = "image/webp"
-
-        prompt_instruction = f"""
+        parts = []
+        
+        if image_base64:
+            # Clean base64 header if present (e.g., data:image/png;base64,...)
+            mime_type = "image/jpeg"
+            if "," in image_base64:
+                header, image_base64 = image_base64.split(",", 1)
+                if "png" in header: mime_type = "image/png"
+                elif "webp" in header: mime_type = "image/webp"
+            
+            prompt_instruction = f"""
 Lihat gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
@@ -128,6 +131,39 @@ Format HANYA JSON:
     "quality": "..."
 }}
 """
+            parts = [
+                {"text": prompt_instruction},
+                {
+                    "inline_data": {
+                        "mime_type": mime_type,
+                        "data": image_base64
+                    }
+                }
+            ]
+        else:
+            prompt_instruction = f"""
+Berdasarkan judul dasar produk/topik ini: "{basic_title}".
+Tugasmu adalah:
+1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
+2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
+3. Buat master prompt untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Pecah prompt menjadi 4 komponen:
+   - "subject": Deskripsi subjek utama (wajib diawali instruksi rasio 9:16).
+   - "detail": Detail bentuk/warna/pakaian.
+   - "background": Latar belakang atau lokasi yang estetik.
+   - "quality": Nuansa, pencahayaan, kualitas render (misal: 4k, photorealistic).
+
+Format HANYA JSON:
+{{
+    "seo_title": "Judul Pinterest",
+    "seo_desc": "Deskripsi Pinterest",
+    "subject": "...",
+    "detail": "...",
+    "background": "...",
+    "quality": "..."
+}}
+"""
+            parts = [{"text": prompt_instruction}]
+
         start_index = self.current_index
         while True:
             key = self.get_current_key()
@@ -135,15 +171,7 @@ Format HANYA JSON:
             
             payload = {
                 "contents": [{
-                    "parts": [
-                        {"text": prompt_instruction},
-                        {
-                            "inline_data": {
-                                "mime_type": mime_type,
-                                "data": image_base64
-                            }
-                        }
-                    ]
+                    "parts": parts
                 }]
             }
             

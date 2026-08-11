@@ -210,13 +210,13 @@ function App() {
   }
 
   const generateSEO = async () => {
-    if (!manualImage) return showToast('Paste atau Pilih gambar referensi dulu!', 'error')
+    if (!manualBasicTitle) return showToast('Harap masukkan Judul Dasar Produk terlebih dahulu!', 'error')
     setIsGeneratingSEO(true)
     try {
       const res = await fetch(`${API_BASE}/generate-seo-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: manualImage, basicTitle: manualBasicTitle })
+        body: JSON.stringify({ imageBase64: manualImage || '', basicTitle: manualBasicTitle })
       })
       const data = await res.json()
       if (data.success) {
