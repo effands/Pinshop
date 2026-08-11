@@ -748,7 +748,7 @@ function App() {
                 {/* Form Inputs Grid - Sleek & Fully Responsive */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '16px',
                   alignItems: 'end'
                 }}>
@@ -760,26 +760,6 @@ function App() {
                   <div className="form-group" style={{margin: 0}}>
                     <label style={{fontWeight: '600', fontSize: '12px'}}>Link Affiliate (Shopee/TikTok)</label>
                     <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
-                  </div>
-
-                  <div className="form-group" style={{margin: 0}}>
-                    <label style={{fontWeight: '600', fontSize: '12px'}}>Jumlah Gambar (Google Flow)</label>
-                    <input 
-                      type="number" 
-                      className="form-control" 
-                      min="1"
-                      max="1000"
-                      value={config.generateCount || 1} 
-                      onChange={e => {
-                        const val = parseInt(e.target.value) || 1;
-                        setConfig({...config, generateCount: val});
-                        fetch(`${API_BASE}/api/save-config`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({...config, generateCount: val})
-                        });
-                      }} 
-                    />
                   </div>
                 </div>
 
