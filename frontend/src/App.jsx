@@ -92,10 +92,15 @@ function App() {
   }
 
   const selectAllGalleryItems = () => {
-    if (selectedGalleryItems.length === galleryFiles.length) {
+    if (!Array.isArray(galleryFiles) || galleryFiles.length === 0) {
+      setSelectedGalleryItems([])
+      return
+    }
+    const allNames = galleryFiles.filter(f => f && f.filename).map(f => f.filename)
+    if (selectedGalleryItems && selectedGalleryItems.length === allNames.length) {
       setSelectedGalleryItems([])
     } else {
-      setSelectedGalleryItems(galleryFiles.map(f => f.filename))
+      setSelectedGalleryItems(allNames)
     }
   }
 
@@ -1330,18 +1335,28 @@ function App() {
                 {galleryFiles.length > 0 && (
                   <>
                     <button 
+                      type="button"
                       className="btn btn-outline" 
                       style={{padding: '6px 16px', fontSize: '13px', borderColor: 'var(--primary)', color: 'var(--primary)'}}
-                      onClick={selectAllGalleryItems}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        selectAllGalleryItems()
+                      }}
                     >
                       {selectedGalleryItems.length === galleryFiles.length ? 'Batal Pilih' : 'Pilih Semua'}
                     </button>
                     
                     {selectedGalleryItems.length > 0 && (
                       <button 
+                        type="button"
                         className="btn btn-danger" 
                         style={{padding: '6px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px'}}
-                        onClick={deleteSelectedGalleryItems}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          deleteSelectedGalleryItems()
+                        }}
                       >
                         <Trash2 size={14} /> Hapus Terpilih ({selectedGalleryItems.length})
                       </button>
@@ -1349,7 +1364,17 @@ function App() {
                   </>
                 )}
                 
-                <button className="btn btn-outline" style={{padding: '6px 16px', fontSize: '13px'}} onClick={fetchGallery} disabled={isLoadingGallery}>
+                <button 
+                  type="button"
+                  className="btn btn-outline" 
+                  style={{padding: '6px 16px', fontSize: '13px'}} 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    fetchGallery()
+                  }} 
+                  disabled={isLoadingGallery}
+                >
                   <RefreshCw size={14} className={isLoadingGallery ? "spin" : ""} /> Refresh Gallery
                 </button>
               </div>
