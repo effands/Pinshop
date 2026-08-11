@@ -110,6 +110,12 @@ async def extension_ws(websocket: WebSocket):
     bridge = bridge_manager.get_bridge()
     await bridge.handle_fastapi_ws(websocket)
 
+@app.post("/api/ext/callback")
+async def extension_callback(body: dict):
+    from . import bridge_manager
+    bridge = bridge_manager.get_bridge()
+    return {"ok": bridge.handle_http_callback(body)}
+
 @app.websocket("/ws/logs")
 async def websocket_logs(websocket: WebSocket):
     await manager.connect(websocket)
