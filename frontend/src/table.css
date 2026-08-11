@@ -1,0 +1,41 @@
+/* Table Styling */
+.custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  background: var(--input-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+}
+
+.custom-table th {
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid var(--panel-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.custom-table td {
+  padding: 16px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--panel-border);
+  vertical-align: middle;
+}
+
+.custom-table tbody tr {
+  transition: background 0.2s;
+}
+
+.custom-table tbody tr:hover {
+  background: rgba(67, 97, 238, 0.05);
+}
+
+.custom-table tbody tr:last-child td {
+  border-bottom: none;
+}
