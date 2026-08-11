@@ -31,30 +31,35 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
             await file_input.set_input_files(image_path)
             await page.wait_for_timeout(2000)
             
-            title_input = page.locator("input#storyboard-selector-title")
+            title_input = page.locator("input#storyboard-selector-title, input[placeholder*='Title'], input[placeholder*='Judul'], input[aria-label*='Title'], input[aria-label*='Judul']").first
             if await title_input.is_visible():
                 await title_input.fill(title)
                 
-            desc_input = page.locator("div[aria-label='Deskripsikan Pin Anda']")
+            desc_input = page.locator("div[aria-label*='Deskripsikan'], div[aria-label*='Tell everyone'], div[aria-label*='description' i], div[role='textbox'], div[contenteditable='true']").first
             if await desc_input.is_visible():
                 await desc_input.fill(description)
                 
-            link_input = page.get_by_placeholder("Tambahkan tautan")
-            if not await link_input.is_visible():
-                link_input = page.locator("input#scrape-view-website-link")
-                
+            link_input = page.locator("input#scrape-view-website-link, input[placeholder*='tautan'], input[placeholder*='link' i], input[aria-label*='link' i], input[aria-label*='tautan']").first
             if await link_input.is_visible():
                 await link_input.fill(link)
                 
-            publish_btn = page.get_by_role("button", name="Simpan").first
-            if await publish_btn.is_visible():
-                await publish_btn.click()
-            else:
-                publish_btn_alt = page.get_by_role("button", name="Terbitkan").first
-                if await publish_btn_alt.is_visible():
-                    await publish_btn_alt.click()
-                
-            await page.wait_for_timeout(5000)
+            # Check Publish / Terbitkan / Simpan buttons
+            publish_clicked = False
+            for btn_name in ["Publish", "Terbitkan", "Simpan", "Save"]:
+                btn = page.get_by_role("button", name=btn_name).first
+                if await btn.is_visible():
+                    await btn.click()
+                    publish_clicked = True
+                    break
+            
+            if not publish_clicked:
+                # Fallback to red publish button selector
+                btn = page.locator("button[data-test-id='board-dropdown-save-button'], button:has-text('Publish'), button:has-text('Terbitkan')").first
+                if await btn.is_visible():
+                    await btn.click()
+                    publish_clicked = True
+
+            await page.wait_for_timeout(8000)
             await browser.close()
             return True
         except Exception as e:
