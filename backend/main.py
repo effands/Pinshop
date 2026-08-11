@@ -116,22 +116,12 @@ async def websocket_logs(websocket: WebSocket):
 async def get_status():
     return {"status": "online"}
 
-class ConfigModel(BaseModel):
-    startTime: str
-    stopTime: str
-    targetPost: int
-    mediaType: str
-    spintaxLinks: str
-    geminiApiKeys: str
-    subject: str
-    detail: str
-    background: str
-    quality: str
+from typing import Dict, Any
 
 @app.post("/api/save-config")
-async def save_config(config: ConfigModel):
+async def save_config(config: Dict[str, Any]):
     with open(settings.SETTINGS_FILE, "w") as f:
-        f.write(config.model_dump_json())
+        json.dump(config, f, indent=4)
     send_log("[System] Configuration saved successfully.")
     return {"success": True}
 
