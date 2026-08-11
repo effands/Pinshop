@@ -71,46 +71,70 @@ function App() {
   }
 
   const [copiedField, setCopiedField] = useState(null)
-  const [editingQueueItem, setEditingQueueItem] = useState(null)
-  const [editTitle, setEditTitle] = useState('')
-  const [editLinks, setEditLinks] = useState('')
-  const [editSeoTitle, setEditSeoTitle] = useState('')
-  const [editSeoDesc, setEditSeoDesc] = useState('')
-  const [editMasterPrompt, setEditMasterPrompt] = useState('')
+  const [editingQueueItemId, setEditingQueueItemId] = useState(null)
 
   const handleEditQueueItem = (item) => {
-    setEditingQueueItem(item)
-    setEditTitle(item.basicTitle || '')
-    setEditLinks(item.spintaxLinks || '')
-    setEditSeoTitle(item.seoTitle || '')
-    setEditSeoDesc(item.seoDesc || '')
-    setEditMasterPrompt(item.masterPrompt || '')
+    setEditingQueueItemId(item.id)
+    setManualBasicTitle(item.basicTitle || '')
+    setManualImages(item.referenceImages || [])
+    setConfig(prev => ({
+      ...prev,
+      spintaxLinks: item.spintaxLinks || '',
+      seoTitle: item.seoTitle || '',
+      seoDesc: item.seoDesc || '',
+      masterPrompt: item.masterPrompt || ''
+    }))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    showToast("Data antrean dimuat ke editor utama di atas!", "info")
   }
 
-  const saveEditedQueueItem = async () => {
-    if (!editTitle) {
+  const cancelEditQueueItem = () => {
+    setEditingQueueItemId(null)
+    setManualBasicTitle('')
+    setManualImages([])
+    setConfig(prev => ({
+      ...prev,
+      spintaxLinks: '',
+      seoTitle: '',
+      seoDesc: '',
+      masterPrompt: ''
+    }))
+    showToast("Edit antrean dibatalkan.", "info")
+  }
+
+  const saveEditedQueueItemDirect = async () => {
+    if (!manualBasicTitle) {
       showToast("Judul Dasar wajib diisi!", "error")
       return
     }
     try {
-      const res = await fetch(`${API_BASE}/queue/${editingQueueItem.id}`, {
+      const res = await fetch(`${API_BASE}/queue/${editingQueueItemId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: editingQueueItem.id,
-          basicTitle: editTitle,
-          spintaxLinks: editLinks,
-          referenceImages: editingQueueItem.referenceImages || [],
-          status: editingQueueItem.status || 'pending',
-          seoTitle: editSeoTitle,
-          seoDesc: editSeoDesc,
-          masterPrompt: editMasterPrompt
+          id: editingQueueItemId,
+          basicTitle: manualBasicTitle,
+          spintaxLinks: config.spintaxLinks || '',
+          referenceImages: manualImages || [],
+          status: 'pending',
+          seoTitle: config.seoTitle || '',
+          seoDesc: config.seoDesc || '',
+          masterPrompt: config.masterPrompt || ''
         })
       })
       const data = await res.json()
       if (data.success) {
         showToast("Item antrean berhasil diperbarui!", "success")
-        setEditingQueueItem(null)
+        setEditingQueueItemId(null)
+        setManualBasicTitle('')
+        setManualImages([])
+        setConfig(prev => ({
+          ...prev,
+          spintaxLinks: '',
+          seoTitle: '',
+          seoDesc: '',
+          masterPrompt: ''
+        }))
         fetchQueue()
       } else {
         showToast("Gagal memperbarui item antrean", "error")
@@ -1380,20 +1404,52 @@ function App() {
               </div>
             </div>
 
-            <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '20px'}}>
-              <button 
-                className="btn btn-primary" 
-                onClick={saveConfig}
-                style={{
-                  padding: '12px 28px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
-                  borderRadius: '30px'
-                }}
-              >
-                Simpan Konfigurasi
-              </button>
+            <div style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px'}}>
+              {editingQueueItemId ? (
+                <>
+                  <button 
+                    type="button"
+                    className="btn btn-action-delete" 
+                    onClick={cancelEditQueueItem}
+                    style={{
+                      padding: '12px 24px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      borderRadius: '30px'
+                    }}
+                  >
+                    Batal Edit
+                  </button>
+                  <button 
+                    type="button"
+                    className="btn btn-primary" 
+                    onClick={saveEditedQueueItemDirect}
+                    style={{
+                      padding: '12px 28px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 4px 15px rgba(139, 92, 246, 0.35)',
+                      borderRadius: '30px'
+                    }}
+                  >
+                    Update Antrean
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className="btn btn-primary" 
+                  onClick={saveConfig}
+                  style={{
+                    padding: '12px 28px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.35)',
+                    borderRadius: '30px'
+                  }}
+                >
+                  Simpan Konfigurasi
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -2014,147 +2070,6 @@ function App() {
                 }}
               >
                 Ya, Lanjutkan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Queue Item Modal */}
-      {editingQueueItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 20000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#151c2c',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '24px',
-            width: '600px',
-            maxWidth: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            padding: '30px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px'}}>
-              <h3 style={{margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <Edit3 size={18} style={{color: 'rgb(139, 92, 246)'}} /> Edit Item Antrean
-              </h3>
-              <button 
-                onClick={() => setEditingQueueItem(null)} 
-                style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px'}}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '8px'}}>
-              <div>
-                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUDUL DASAR</label>
-                <input 
-                  type="text" 
-                  value={editTitle} 
-                  onChange={(e) => setEditTitle(e.target.value)} 
-                  className="input-field" 
-                  style={{width: '100%', boxSizing: 'border-box'}}
-                />
-              </div>
-
-              <div>
-                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE (SPINTAX)</label>
-                <input 
-                  type="text" 
-                  value={editLinks} 
-                  onChange={(e) => setEditLinks(e.target.value)} 
-                  className="input-field" 
-                  style={{width: '100%', boxSizing: 'border-box'}}
-                />
-              </div>
-
-              <div>
-                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>JUDUL SEO PINTEREST (SPINTAX)</label>
-                <input 
-                  type="text" 
-                  value={editSeoTitle} 
-                  onChange={(e) => setEditSeoTitle(e.target.value)} 
-                  className="input-field" 
-                  style={{width: '100%', boxSizing: 'border-box'}}
-                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
-                />
-              </div>
-
-              <div>
-                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>DESKRIPSI SEO PINTEREST (SPINTAX)</label>
-                <textarea 
-                  value={editSeoDesc} 
-                  onChange={(e) => setEditSeoDesc(e.target.value)} 
-                  className="input-field" 
-                  rows={4}
-                  style={{width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit'}}
-                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
-                />
-              </div>
-
-              <div>
-                <label style={{display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>AI MASTER PROMPT (SPINTAX)</label>
-                <textarea 
-                  value={editMasterPrompt} 
-                  onChange={(e) => setEditMasterPrompt(e.target.value)} 
-                  className="input-field" 
-                  rows={4}
-                  style={{width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit'}}
-                  placeholder="Opsional - Jika kosong akan digenerate otomatis oleh Gemini"
-                />
-              </div>
-            </div>
-
-            <div style={{display: 'flex', gap: '12px', width: '100%', marginTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px'}}>
-              <button 
-                type="button"
-                className="btn" 
-                onClick={() => setEditingQueueItem(null)}
-                style={{
-                  flex: 1, 
-                  padding: '12px', 
-                  borderRadius: '12px', 
-                  fontSize: '14px', 
-                  fontWeight: 'bold', 
-                  color: '#fff', 
-                  background: 'rgba(255,255,255,0.08)', 
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  cursor: 'pointer'
-                }}
-              >
-                Batal
-              </button>
-              <button 
-                type="button"
-                className="btn btn-primary" 
-                onClick={saveEditedQueueItem}
-                style={{
-                  flex: 1, 
-                  padding: '12px', 
-                  borderRadius: '12px', 
-                  fontSize: '14px', 
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                Simpan Perubahan
               </button>
             </div>
           </div>
