@@ -40,14 +40,13 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
             await file_input.wait_for(state="attached")
             await file_input.set_input_files(image_path)
             await page.wait_for_timeout(2000)
-            
             log(f"> Mengisi Judul: {title[:40]}...")
             title_input = page.locator("input#storyboard-selector-title, input[placeholder*='Title'], input[placeholder*='Judul'], input[aria-label*='Title'], input[aria-label*='Judul']").first
             if await title_input.is_visible():
                 await title_input.fill(title)
                 
             log("> Mengisi Deskripsi & Hashtag SEO...")
-            desc_input = page.locator("div[aria-label*='Deskripsikan'], div[aria-label*='Tell everyone'], div[aria-label*='description' i], div[role='textbox'], div[contenteditable='true']").first
+            desc_input = page.locator("div[contenteditable='true'][aria-label*='Deskripsikan'], div[contenteditable='true'][aria-label*='Tell everyone'], div[contenteditable='true'][aria-label*='description' i], textarea[id*='description'], textarea[placeholder*='description' i]").first
             if await desc_input.is_visible():
                 await desc_input.fill(description)
                 
@@ -56,7 +55,6 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                 link_input = page.locator("input#scrape-view-website-link, input[placeholder*='tautan'], input[placeholder*='link' i], input[aria-label*='link' i], input[aria-label*='tautan']").first
                 if await link_input.is_visible():
                     await link_input.fill(link)
-                
             log("> Menekan tombol Terbitkan (Publish)...")
             publish_clicked = False
             for btn_name in ["Publish", "Terbitkan", "Simpan", "Save"]:
