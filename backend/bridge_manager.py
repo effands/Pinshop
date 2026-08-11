@@ -63,14 +63,32 @@ def status_snapshot() -> dict:
 
     instances = _bridge.instance_snapshot()
     
-    # Deduplicate by instance_name or project_id if duplicate connections exist
+    # Deduplicate by project_id or clean base profile name
+    import re
     unique_instances = []
-    seen_keys = set()
+    seen_projects = set()
+    seen_names = set()
+
     for inst in instances:
-        key = inst.get("name") or inst.get("id")
-        if key not in seen_keys:
-            seen_keys.add(key)
-            unique_instances.append(inst)
+        pid = (inst.get("project_id") or "").strip()
+        raw_name = (inst.get("name") or "").strip()
+        base_name = re.sub(r'·\s*[a-f0-9]+', '', raw_name).strip()
+
+        if pid and pid != "auto":
+            if pid in seen_projects:
+                continue
+            seen_projects.add(pid)
+        elif base_name:
+            if base_name in seen_names:
+                continue
+            seen_names.add(base_name)
+        else:
+            i_id = inst.get("id")
+            if i_id in seen_names:
+                continue
+            seen_names.add(i_id)
+
+        unique_instances.append(inst)
 
     any_connected = len(unique_instances) > 0
     any_logged_in = any(i.get("logged_in") for i in unique_instances)
