@@ -83,12 +83,10 @@ let currentProjectId = null;
 
 async function _detectProjectIdFromTabs() {
   try {
-    const tabs = await chrome.tabs.query({
-      url: ['https://labs.google/fx/tools/flow*', 'https://labs.google/fx/*/tools/flow*'],
-    });
+    const tabs = await chrome.tabs.query({});
     if (tabs && tabs.length) {
       for (const tab of tabs) {
-        if (tab.url) {
+        if (tab.url && tab.url.includes('labs.google')) {
           const match = tab.url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
           if (match && match[0]) {
             currentProjectId = match[0];
@@ -100,6 +98,16 @@ async function _detectProjectIdFromTabs() {
   } catch (e) {}
   return currentProjectId;
 }
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url && changeInfo.url.includes('labs.google')) {
+    _updateInstanceName();
+  }
+});
+
+chrome.tabs.onActivated.addListener(() => {
+  _updateInstanceName();
+});
 
 function _extractUserEmail(jwtToken) {
   try {

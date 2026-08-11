@@ -71,13 +71,19 @@ async def autopilot_loop(logger_func):
             import base64
             import os
             
-            project_id, instance_name = bridge.get_active_instance_info()
-            if not project_id or project_id == "auto":
-                instances = bridge.instance_snapshot()
-                if instances and instances[0].get("project_id"):
-                    project_id = instances[0].get("project_id")
-                    instance_name = instances[0].get("name", "Default")
-                else:
+            instances = bridge.instance_snapshot()
+            active_inst = None
+            for inst in instances:
+                if inst.get("project_id") and inst.get("project_id") != "auto":
+                    active_inst = inst
+                    break
+            
+            if active_inst:
+                project_id = active_inst.get("project_id")
+                instance_name = active_inst.get("name", "Chrome")
+            else:
+                project_id, instance_name = bridge.get_active_instance_info()
+                if not project_id or project_id == "auto":
                     from omniflash.config import DEFAULT_PROJECT
                     project_id = DEFAULT_PROJECT
                     instance_name = "Default"
