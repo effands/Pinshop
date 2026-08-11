@@ -107,7 +107,7 @@ Output HANYA JSON.
 Lihat {len(images_base64)} gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
-2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
+2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
 3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
 
 Format HANYA JSON:
@@ -139,7 +139,7 @@ Format HANYA JSON:
 Berdasarkan judul dasar produk/topik ini: "{basic_title}".
 Tugasmu adalah:
 1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
-2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan beberapa hashtag di akhir.
+2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
 3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (wajib diawali rasio 9:16 atau --ar 9:16).
 
 Format HANYA JSON:
