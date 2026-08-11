@@ -79,6 +79,88 @@ function App() {
     }
   }
 
+  const [queueItems, setQueueItems] = useState([])
+  const [isAddingToQueue, setIsAddingToQueue] = useState(false)
+
+  const fetchQueue = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/queue`)
+      const data = await res.json()
+      if (data.queue) {
+        setQueueItems(data.queue)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const addToQueue = async () => {
+    if (!manualBasicTitle) {
+      showToast("Judul Dasar wajib diisi!", "error")
+      return
+    }
+    if (manualImages.length === 0) {
+      showToast("Harap tempel/unggah minimal 1 gambar referensi!", "error")
+      return
+    }
+    
+    setIsAddingToQueue(true)
+    const newItem = {
+      id: 'q_' + Date.now(),
+      basicTitle: manualBasicTitle,
+      spintaxLinks: config.spintaxLinks || "",
+      referenceImages: manualImages,
+      status: "pending"
+    }
+    
+    try {
+      const res = await fetch(`${API_BASE}/queue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Item berhasil ditambahkan ke Antrean!", "success")
+        fetchQueue()
+        // Clear input inputs so the user can quickly add more products
+        setManualBasicTitle('')
+        setManualImages([])
+      } else {
+        showToast("Gagal menambahkan ke antrean", "error")
+      }
+    } catch (e) {
+      showToast("Koneksi gagal", "error")
+    }
+    setIsAddingToQueue(false)
+  }
+
+  const deleteQueueItem = async (itemId) => {
+    try {
+      const res = await fetch(`${API_BASE}/queue/${itemId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Item dihapus dari antrean", "success")
+        fetchQueue()
+      }
+    } catch (e) {
+      showToast("Gagal menghapus item", "error")
+    }
+  }
+
+  const clearQueue = async () => {
+    if (!confirm("Hapus seluruh isi antrean?")) return
+    try {
+      const res = await fetch(`${API_BASE}/queue/clear`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Antrean berhasil dikosongkan", "success")
+        fetchQueue()
+      }
+    } catch (e) {
+      showToast("Gagal mengosongkan antrean", "error")
+    }
+  }
   const [manualImages, setManualImages] = useState([])
   const [manualBasicTitle, setManualBasicTitle] = useState('')
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false)
@@ -129,6 +211,7 @@ function App() {
       .catch(err => console.error(err))
 
     fetchAccounts()
+    fetchQueue()
 
     const ws = new WebSocket(WS_URL)
     ws.onmessage = (event) => {
@@ -144,6 +227,8 @@ function App() {
         const data = await res.json()
         setFlowCount(data.flowCount || 0)
       } catch(e) {}
+      // Poll queue updates in real-time
+      fetchQueue()
     }
     checkStatus()
     const intv = setInterval(checkStatus, 5000)
@@ -818,7 +903,7 @@ function App() {
                       alignItems: 'center', 
                       justifyContent: 'center', 
                       gap: '8px', 
-                      flex: '1 1 150px',
+                      flex: '1 1 140px',
                       whiteSpace: 'nowrap'
                     }} 
                     onClick={generateSEO} 
@@ -827,8 +912,133 @@ function App() {
                     {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
                     {isGeneratingSEO ? 'Generating...' : 'Generate SEO'}
                   </button>
+
+                  <button 
+                    className="btn btn-outline" 
+                    style={{
+                      height: '42px', 
+                      padding: '0 24px', 
+                      fontSize: '14px', 
+                      fontWeight: 'bold', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '8px', 
+                      flex: '1 1 140px',
+                      whiteSpace: 'nowrap',
+                      borderColor: 'var(--primary)',
+                      color: 'var(--primary)'
+                    }} 
+                    onClick={addToQueue} 
+                    disabled={isAddingToQueue}
+                  >
+                    {isAddingToQueue ? <RefreshCw size={16} className="spin" /> : <UploadCloud size={16} />} 
+                    Queue Posting
+                  </button>
                 </div>
               </div>
+            </div>
+
+            {/* Bulk Queue Panel */}
+            <div className="panel" style={{
+              marginTop: '24px', 
+              border: '1px solid var(--panel-border)',
+              background: 'var(--panel-bg)',
+              borderRadius: '16px',
+              padding: '20px'
+            }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
+                  <span>📋</span> Antrean Posting Massal ({queueItems.length} Produk)
+                </h3>
+                {queueItems.length > 0 && (
+                  <button className="btn btn-outline" style={{borderColor: 'var(--danger)', color: 'var(--danger)', padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
+                    Kosongkan Antrean
+                  </button>
+                )}
+              </div>
+              
+              {queueItems.length === 0 ? (
+                <div style={{textAlign: 'center', padding: '30px 20px', color: 'var(--text-muted)'}}>
+                  <p style={{fontSize: '13px', margin: 0}}>Belum ada produk dalam antrean massal.</p>
+                  <p style={{fontSize: '12px', marginTop: '6px', opacity: 0.8}}>Masukkan foto dan judul di atas, lalu klik "Queue Posting" untuk menumpuk antrean.</p>
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px'}}>
+                  {queueItems.map((item, idx) => {
+                    let statusColor = 'var(--text-muted)';
+                    let statusBg = 'rgba(0,0,0,0.05)';
+                    if (item.status === 'running') {
+                      statusColor = '#8b5cf6';
+                      statusBg = 'rgba(139, 92, 246, 0.1)';
+                    } else if (item.status === 'success') {
+                      statusColor = 'var(--success)';
+                      statusBg = 'rgba(46, 196, 182, 0.1)';
+                    } else if (item.status === 'failed') {
+                      statusColor = 'var(--danger)';
+                      statusBg = 'rgba(239, 35, 60, 0.1)';
+                    }
+                    
+                    return (
+                      <div key={item.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid var(--panel-border)',
+                        borderRadius: '10px',
+                        gap: '12px'
+                      }}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0}}>
+                          {/* Mini Thumbnail Grid */}
+                          <div style={{display: 'flex', gap: '4px', flexShrink: 0}}>
+                            {item.referenceImages && item.referenceImages.slice(0, 3).map((img, i) => (
+                              <img key={i} src={img} alt="" style={{width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)'}} />
+                            ))}
+                            {item.referenceImages && item.referenceImages.length > 3 && (
+                              <div style={{width: '28px', height: '28px', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 'bold'}}>
+                                +{item.referenceImages.length - 3}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div style={{minWidth: 0, flex: 1}}>
+                            <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                              {item.basicTitle}
+                            </p>
+                            <p style={{fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                              {item.spintaxLinks || "Tanpa Link Affiliate"}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '20px',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            color: statusColor,
+                            background: statusBg,
+                            textTransform: 'uppercase'
+                          }}>
+                            {item.status}
+                          </span>
+                          <button 
+                            className="btn btn-outline" 
+                            style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'rgba(239, 35, 60, 0.2)', color: 'var(--danger)'}}
+                            onClick={() => deleteQueueItem(item.id)}
+                            title="Hapus"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* AI Master Prompt Luxury Panel */}
