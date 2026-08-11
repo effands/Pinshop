@@ -16,7 +16,7 @@ echo.
 
 REM 1. Check Python Installation
 where python >nul 2>nul
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     echo [ERROR] Python tidak ditemukan di sistem Anda!
     echo Harap install Python 3.10 atau versi di atasnya.
     echo WAJIB centang "Add Python to PATH" saat menginstall.
@@ -28,10 +28,10 @@ if %errorlevel% neq 0 (
 
 REM 2. Check Node.js / NPM Installation
 where npm >nul 2>nul
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     echo [ERROR] Node.js / NPM tidak ditemukan di sistem Anda!
     echo Harap install Node.js terlebih dahulu untuk menjalankan Frontend.
-    echo Download: https://nodejs.org/ (Pilih versi LTS)
+    echo Download: https://nodejs.org/ - Pilih versi LTS
     echo.
     pause
     exit /b
@@ -39,7 +39,7 @@ if %errorlevel% neq 0 (
 
 REM 3. Check for GitHub Updates
 where git >nul 2>nul
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     echo [System] Mengecek update terbaru dari GitHub...
     git pull origin main
 ) else (
@@ -75,8 +75,8 @@ echo.
 echo [System] Memulai UI (Frontend) di background...
 start /b cmd /c "cd frontend && npm run dev -- --port 5115"
 
-echo [System] Mengecek proses lama yang masih nyangkut di port 8015/9227...
-for %%P in (8015 9227) do (
+echo [System] Mengecek proses lama yang masih nyangkut di port 8001/9227...
+for %%P in (8001 9227) do (
     for /f "tokens=5" %%A in ('netstat -ano ^| findstr /r /c:"127.0.0.1:%%P .*LISTENING"') do (
         echo [System] Menutup proses lama ^(PID %%A^) di port %%P...
         taskkill /F /PID %%A >nul 2>nul
@@ -84,11 +84,11 @@ for %%P in (8015 9227) do (
 )
 
 echo [System] Menyiapkan browser... (Mohon tunggu sebentar)
-timeout /t 3 /nobreak > nul
+ping 127.0.0.1 -n 4 > nul
 start http://localhost:5115
 
 echo [System] Menjalankan Backend Engine...
 call .venv\Scripts\activate
-".venv\Scripts\python.exe" -m uvicorn backend.main:app --host 127.0.0.1 --port 8015
+".venv\Scripts\python.exe" -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
 
 pause

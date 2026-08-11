@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, Edit3, UploadCloud, Copy, Check, Image as ImageIcon, Film, Download, FolderHeart, AlertTriangle } from 'lucide-react'
 import './index.css'
 
-const API_BASE = 'http://127.0.0.1:8015/api'
-const WS_URL = 'ws://127.0.0.1:8015/ws/logs'
+const API_BASE = 'http://127.0.0.1:8001/api'
+const WS_URL = 'ws://127.0.0.1:8001/ws/logs'
 
 function App() {
   const [activeTab, setActiveTab] = useState('prompt')
@@ -1692,7 +1692,7 @@ function App() {
                       {file.type === 'video' ? (
                         <div style={{width: '100%', height: '100%', position: 'relative'}}>
                           <video 
-                            src={`http://127.0.0.1:8015${file.url}`} 
+                            src={`http://127.0.0.1:8001${file.url}`} 
                             style={{width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none'}}
                           />
                           {/* Floating Play Indicator */}
@@ -1715,7 +1715,7 @@ function App() {
                         </div>
                       ) : (
                         <img 
-                          src={`http://127.0.0.1:8015${file.url}`} 
+                          src={`http://127.0.0.1:8001${file.url}`} 
                           alt={file.filename} 
                           style={{width: '100%', height: '100%', objectFit: 'cover'}} 
                         />
@@ -1776,7 +1776,7 @@ function App() {
                       
                       <div style={{display: 'flex', gap: '4px'}}>
                         <a 
-                          href={`http://127.0.0.1:8015${file.url}`} 
+                          href={`http://127.0.0.1:8001${file.url}`} 
                           download={file.filename} 
                           target="_blank"
                           rel="noreferrer"
