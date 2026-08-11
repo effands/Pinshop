@@ -690,6 +690,28 @@ function App() {
                     <input type="text" className="form-control" value={config.spintaxLinks} onChange={e => setConfig({...config, spintaxLinks: e.target.value})} placeholder="https://shope.ee/..." />
                   </div>
 
+                  <div className="form-group" style={{marginBottom: 0}}>
+                    <label>Jumlah Gambar (Google Flow)</label>
+                    <select 
+                      className="form-control" 
+                      value={config.generateCount || 1} 
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        setConfig({...config, generateCount: val});
+                        fetch(`${API_BASE}/api/save-config`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({...config, generateCount: val})
+                        });
+                      }}
+                    >
+                      <option value={1}>1 Gambar (1x)</option>
+                      <option value={2}>2 Gambar (2x)</option>
+                      <option value={3}>3 Gambar (3x)</option>
+                      <option value={4}>4 Gambar (4x)</option>
+                    </select>
+                  </div>
+
                   <div style={{marginTop: 'auto'}}>
                     <button className="btn btn-primary" style={{width: '100%', padding: '14px 24px'}} onClick={generateSEO} disabled={isGeneratingSEO}>
                       {isGeneratingSEO ? <RefreshCw size={16} className="spin" /> : <Wand2 size={16} />} 
