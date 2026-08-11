@@ -367,14 +367,14 @@ function App() {
           <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
             <Settings size={18} /> Settings
           </div>
+          <div className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`} onClick={() => { setActiveTab('gallery'); fetchGallery(); }}>
+            <FolderHeart size={18} /> Gallery
+          </div>
           <div className={`nav-item ${activeTab === 'auth' ? 'active' : ''}`} onClick={() => setActiveTab('auth')}>
             <Shield size={18} /> Auth
           </div>
           <div className={`nav-item ${activeTab === 'activity' ? 'active' : ''}`} onClick={() => setActiveTab('activity')}>
             <LayoutDashboard size={18} /> Monitor
-          </div>
-          <div className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`} onClick={() => { setActiveTab('gallery'); fetchGallery(); }}>
-            <FolderHeart size={18} /> Gallery
           </div>
         </div>
 
