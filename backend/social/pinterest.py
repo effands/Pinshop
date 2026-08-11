@@ -19,7 +19,7 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
         )
         page = await browser.new_page()
         try:
-            await page.goto("https://www.pinterest.com/pin-creation/tool/")
+            await page.goto("https://www.pinterest.com/pin-creation-tool/")
             await page.wait_for_timeout(3000)
             if "login" in page.url:
                 print(f"[{account_name}] Not logged in to Pinterest. Please login manually first via Auth Setup.")
