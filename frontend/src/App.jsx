@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud, Copy, Check } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -17,7 +17,16 @@ function App() {
   const [accountsList, setAccountsList] = useState([])
   const [isTestingKeys, setIsTestingKeys] = useState(false)
   const [flowCount, setFlowCount] = useState(0)
+  const [isLogsCopied, setIsLogsCopied] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' })
+
+  const copyLogsToClipboard = () => {
+    if (logs.length === 0) return showToast('Log masih kosong!', 'info')
+    navigator.clipboard.writeText(logs.join('\n'))
+    setIsLogsCopied(true)
+    showToast('Log berhasil disalin ke clipboard!', 'success')
+    setTimeout(() => setIsLogsCopied(false), 2000)
+  }
 
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type })
@@ -363,9 +372,15 @@ function App() {
                   <span className="dot dot-green"></span>
                 </div>
                 <div className="terminal-title">live_engine_logs.sh</div>
-                <button className="terminal-clear-btn" onClick={() => setLogs([])} title="Hapus Log">
-                  <Trash2 size={13} /> Clear
-                </button>
+                <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                  <button className="terminal-clear-btn" onClick={copyLogsToClipboard} title="Salin semua log">
+                    {isLogsCopied ? <Check size={13} style={{color: '#22c55e'}} /> : <Copy size={13} />}
+                    {isLogsCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button className="terminal-clear-btn" onClick={() => setLogs([])} title="Hapus Log">
+                    <Trash2 size={13} /> Clear
+                  </button>
+                </div>
               </div>
               <div className="terminal-body">
                 {logs.length === 0 ? (

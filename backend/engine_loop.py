@@ -143,17 +143,20 @@ async def autopilot_loop(logger_func):
             else:
                 logger_func("> Meminta Google Flow merender FOTO Mahakarya HD...")
                 ref_media_ids = [ref_media_id] if ref_media_id else None
-                results = await generate_image(bridge, prompt, aspect="9:16", project_id=project_id, count=1, ref_media_ids=ref_media_ids)
+                results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=1, ref_media_ids=ref_media_ids)
                 
                 if not results:
                     logger_func("[Error] Gagal merender gambar dari Flow.")
                     await asyncio.sleep(30)
                     continue
                     
-                image_url = results[0].get("url") or results[0] # handle string just in case
-                if isinstance(image_url, dict): image_url = image_url.get("url")
+                first_item = results[0]
+                image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
                 result_path = "storage/generated.png"
-                await download_image(bridge, image_url, result_path)
+                logger_func(f"> Mengunduh gambar hasil render AI...")
+                dl_ok = await download_image(bridge, image_url, result_path)
+                if not dl_ok:
+                    logger_func("[Warning] Gagal mengunduh gambar hasil render.")
             
             # Target Account
             account_name = config.get("targetAccount")
