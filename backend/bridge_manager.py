@@ -36,8 +36,11 @@ async def close_bridge() -> None:
 
 
 def get_bridge() -> ExtensionBridge:
+    global _bridge
     if _bridge is None:
-        raise RuntimeError("Extension bridge belum diinisialisasi")
+        _bridge = ExtensionBridge()
+        _bridge.set_preferred_instance(settings.get_flow_extension_instance_id())
+        # Note: start() is normally called in init_bridge, but we instantiate it here to prevent RuntimeError
     return _bridge
 
 

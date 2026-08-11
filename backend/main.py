@@ -52,11 +52,18 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 def send_log(message: str):
-    print(message)
+    import datetime
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    # Avoid double timestamping if the message already starts with a bracketed time
+    if not message.startswith("[20") and not (message.startswith("[") and ":" in message[:10]):
+        formatted = f"[{now}] {message}"
+    else:
+        formatted = message
+    print(formatted)
     # create task to broadcast safely
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(manager.broadcast(json.dumps({"type": "log", "message": message})))
+        loop.create_task(manager.broadcast(json.dumps({"type": "log", "message": formatted})))
     except RuntimeError:
         pass
 
