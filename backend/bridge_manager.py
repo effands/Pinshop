@@ -46,10 +46,34 @@ def get_bridge() -> ExtensionBridge:
 
 def status_snapshot() -> dict:
     if _bridge is None:
-        return {"state": "starting", "extension_connected": False, "logged_in": False, "instances": []}
+        return {"state": "starting", "extension_connected": False, "logged_in": False, "instances": [], "total_connected_profiles": 0}
+    
+    # Prune any closed/stale websockets from _instances
+    stale_ids = []
+    for i_id, entry in list(_bridge._instances.items()):
+        ws = entry.get("ws")
+        if ws is None:
+            stale_ids.append(i_id)
+        elif hasattr(ws, "client_state") and str(ws.client_state).upper() in ("DISCONNECTED", "CLOSED"):
+            stale_ids.append(i_id)
+        elif hasattr(ws, "closed") and ws.closed:
+            stale_ids.append(i_id)
+    for s_id in stale_ids:
+        _bridge._instances.pop(s_id, None)
+
     instances = _bridge.instance_snapshot()
-    any_connected = len(instances) > 0
-    any_logged_in = any(i.get("logged_in") for i in instances)
+    
+    # Deduplicate by instance_name or project_id if duplicate connections exist
+    unique_instances = []
+    seen_keys = set()
+    for inst in instances:
+        key = inst.get("name") or inst.get("id")
+        if key not in seen_keys:
+            seen_keys.add(key)
+            unique_instances.append(inst)
+
+    any_connected = len(unique_instances) > 0
+    any_logged_in = any(i.get("logged_in") for i in unique_instances)
 
     if any_connected and any_logged_in:
         state = "ready"
@@ -64,8 +88,8 @@ def status_snapshot() -> dict:
         "logged_in": any_logged_in,
         "active_extension_instance_id": _bridge.active_instance_id,
         "selected_extension_instance_id": _bridge._preferred_instance_id,
-        "extension_instances": instances,
-        "total_connected_profiles": len(instances),
+        "extension_instances": unique_instances,
+        "total_connected_profiles": len(unique_instances),
     }
 
 
