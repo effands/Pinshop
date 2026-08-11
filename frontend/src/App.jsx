@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2 } from 'lucide-react'
+import { LayoutDashboard, Settings, Wand2, Shield, Zap, XCircle, Key, RefreshCw, Cookie, Trash2, UploadCloud } from 'lucide-react'
 import './index.css'
 
 const API_BASE = 'http://127.0.0.1:8001/api'
@@ -21,6 +21,31 @@ function App() {
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type })
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 4000)
+  }
+  
+  const [manualImage, setManualImage] = useState(null)
+  const [manualBasicTitle, setManualBasicTitle] = useState('')
+  const [isGeneratingSEO, setIsGeneratingSEO] = useState(false)
+
+  const handleManualPaste = (e) => {
+    const items = e.clipboardData.items
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile()
+        const reader = new FileReader()
+        reader.onload = (event) => setManualImage(event.target.result)
+        reader.readAsDataURL(blob)
+      }
+    }
+  }
+
+  const handleManualFile = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => setManualImage(event.target.result)
+      reader.readAsDataURL(file)
+    }
   }
   
   const [config, setConfig] = useState({
