@@ -164,6 +164,7 @@ class GenerateSeoPromptRequest(BaseModel):
 async def api_generate_seo_prompt(req: GenerateSeoPromptRequest):
     from .gemini_manager import manager
     import os, uuid, base64
+    from pathlib import Path
     try:
         # Generate prompt from Gemini
         result = manager.generate_prompt_from_image(req.imagesBase64, req.basicTitle)
