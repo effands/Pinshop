@@ -52,11 +52,11 @@ async def autopilot_loop(logger_func):
             else:
                 logger_func("> Merender mahakarya FOTO AI. Sistem standby...")
             
-            from .bridge_manager import get_bridge
+            from .bridge_manager import get_bridge, status_snapshot
             bridge = get_bridge()
 
             # Wait for bridge
-            if not bridge.is_ready():
+            if status_snapshot()["state"] != "ready":
                 logger_func("[Warning] Bridge Google Flow belum ready!")
                 await asyncio.sleep(10)
                 continue
