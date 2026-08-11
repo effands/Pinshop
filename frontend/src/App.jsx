@@ -1245,7 +1245,7 @@ function App() {
                       <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>TEMA UTAMA (TOPIK)</label>
                       <input 
                         type="text" 
-                        className="input-field" 
+                        className="form-control" 
                         placeholder="Contoh: meja belajar estetik dan kokoh" 
                         style={{width: '100%', boxSizing: 'border-box'}}
                         value={bulkTheme}
@@ -1257,7 +1257,7 @@ function App() {
                       <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px'}}>LINK AFFILIATE SHOPEE</label>
                       <input 
                         type="text" 
-                        className="input-field" 
+                        className="form-control" 
                         placeholder="Link affiliate Shopee..." 
                         style={{width: '100%', boxSizing: 'border-box'}}
                         value={bulkShopeeLink}
@@ -1271,7 +1271,7 @@ function App() {
                         type="number" 
                         min="1" 
                         max="20" 
-                        className="input-field" 
+                        className="form-control" 
                         style={{width: '100%', boxSizing: 'border-box'}}
                         value={bulkCount}
                         onChange={e => setBulkCount(parseInt(e.target.value) || 5)}
