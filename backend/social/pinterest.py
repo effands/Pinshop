@@ -18,11 +18,24 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
     profile_dir = PROFILES_BASE_DIR / account_name
     profile_dir.mkdir(parents=True, exist_ok=True)
     
-    log(f"> Membuka browser Pinterest [{account_name}]...")
+    # Load config to check if browser should be headless or visible
+    headless = False
+    try:
+        from .. import settings as backend_settings
+        import json
+        if backend_settings.SETTINGS_FILE.exists():
+            with open(backend_settings.SETTINGS_FILE, "r") as f:
+                cfg = json.load(f)
+                mode = cfg.get("pinterestBrowserMode", "visible")
+                headless = (mode == "headless")
+    except Exception:
+        pass
+
+    log(f"> Membuka browser Pinterest [{account_name}] (Headless: {headless})...")
     async with async_playwright() as p:
         browser = await p.chromium.launch_persistent_context(
             user_data_dir=str(profile_dir),
-            headless=False,
+            headless=headless,
             args=["--disable-blink-features=AutomationControlled"]
         )
         page = await browser.new_page()

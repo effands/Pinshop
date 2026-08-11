@@ -616,9 +616,29 @@ function App() {
                     {accountsList.filter(a => a.status === 'valid').map((acc, i) => (
                       <option key={i} value={acc.name}>{acc.name} (Valid)</option>
                     ))}
-                  </select>
-                </div>
-                <div className="form-group" style={{flex: '1 1 120px'}}>
+                 </div>
+                 
+                 <div className="form-group" style={{flex: '1 1 180px'}}>
+                   <label>Browser Pinterest</label>
+                   <select 
+                     className="form-control" 
+                     value={config.pinterestBrowserMode || 'visible'} 
+                     onChange={e => {
+                       const val = e.target.value;
+                       setConfig({...config, pinterestBrowserMode: val});
+                       fetch(`${API_BASE}/api/save-config`, {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({...config, pinterestBrowserMode: val})
+                       });
+                     }}
+                   >
+                     <option value="visible">Tampilkan (Visible)</option>
+                     <option value="headless">Latar Belakang (Headless)</option>
+                   </select>
+                 </div>
+
+                 <div className="form-group" style={{flex: '1 1 120px'}}>
                   <label>Jam Mulai</label>
                   <input type="time" className="form-control" value={config.startTime} onChange={e => setConfig({...config, startTime: e.target.value})} />
                 </div>
