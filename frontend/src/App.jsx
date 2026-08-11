@@ -318,6 +318,9 @@ function App() {
         const res = await fetch(`${API_BASE}/status`)
         const data = await res.json()
         setFlowCount(data.flowCount || 0)
+        if (data.autopilotRunning !== undefined) {
+          setIsRunning(data.autopilotRunning)
+        }
       } catch(e) {}
       // Poll queue updates in real-time
       fetchQueue()

@@ -227,7 +227,8 @@ async def get_status():
         flow_count = status_snapshot().get("total_connected_profiles", 0)
     except Exception:
         flow_count = 0
-    return {"status": "online", "flowCount": flow_count}
+    from .engine_loop import is_autopilot_running
+    return {"status": "online", "flowCount": flow_count, "autopilotRunning": is_autopilot_running()}
 
 from typing import Dict, Any
 

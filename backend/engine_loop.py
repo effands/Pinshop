@@ -43,6 +43,11 @@ async def autopilot_loop(logger_func):
 
             is_queue_mode = active_queue_item is not None
 
+            if not is_queue_mode and not config.get("masterPrompt", "").strip():
+                logger_func("[System] Antrean kosong dan tidak ada Master Prompt manual. Menghentikan Autopilot.")
+                _running = False
+                break
+
             if is_queue_mode:
                 logger_func(f"\n[Queue] Memproses item antrean: {active_queue_item.get('basicTitle')} (ID: {active_queue_item.get('id')})")
                 
@@ -441,3 +446,7 @@ def stop_autopilot(logger_func):
     if _autopilot_task:
         _autopilot_task.cancel()
     logger_func("[System] Autopilot Stopped.")
+
+def is_autopilot_running() -> bool:
+    global _running
+    return _running

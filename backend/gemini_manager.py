@@ -211,4 +211,7 @@ Format HANYA JSON:
             if self.current_index == start_index:
                 raise ValueError("Semua Gemini API Key gagal.")
 
+    def generate_seo_and_prompt(self, basic_title: str, reference_images: list[str]) -> dict:
+        return self.generate_prompt_from_image(reference_images, basic_title)
+
 manager = GeminiManager()
