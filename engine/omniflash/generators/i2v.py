@@ -61,12 +61,26 @@ async def upload_image(bridge, image_path: str, project_id: str = None) -> str |
     }
 
     log.info("Uploading image: %s", os.path.basename(image_path))
-    result = await bridge.api_request(ENDPOINTS["upload_image"], body, captcha_action="")
-
-    status = result.get("status", 0)
-    data = result.get("data", {})
-    if status != 200:
-        err = _api_error_message(result)
+    endpoints_to_try = [
+        f"/v1/projects/{project_id}/flowMedia:uploadImage",
+        "/v1/flowMedia:uploadImage",
+        ENDPOINTS.get("upload_image", "/v1/flow/uploadImage")
+    ]
+    
+    result = None
+    last_err = None
+    for ep in endpoints_to_try:
+        try:
+            result = await bridge.api_request(ep, body, captcha_action="", timeout=25)
+            if result and result.get("status") == 200:
+                break
+            if result and result.get("error") != "TIMEOUT":
+                last_err = result
+        except Exception as e:
+            last_err = str(e)
+            
+    if not result or result.get("status") != 200:
+        err = _api_error_message(result or {"error": last_err or "Unknown"})
         err_msg = f"Image upload failed: {err}"
         log.error("%s", err_msg)
         raise ValueError(err_msg)
