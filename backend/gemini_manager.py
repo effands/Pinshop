@@ -105,10 +105,12 @@ Output HANYA JSON.
         if images_base64 and len(images_base64) > 0:
             prompt_instruction = f"""
 Lihat {len(images_base64)} gambar produk/referensi ini dan judul dasarnya: "{basic_title}".
-Tugasmu adalah:
-1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
-2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
-3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate ulang gambar ini menjadi lebih estetik di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (DILARANG menggunakan flag/parameter rasio seperti --ar 9:16 atau 9:16).
+Tugasmu adalah membuat template Spintax agar hasilnya selalu bervariasi setiap kali di-spin. Gunakan format tradisional Spintax {opsi1|opsi2|opsi3} pada kata atau frasa kunci di semua bagian.
+
+Tugas spesifik:
+1. Buat "seo_title": Judul Clickbait Pinterest yang kaya variasi kata kunci dalam format Spintax. Contoh: "{Spill|Bocoran|Rekomendasi} {Meja Kerja|Meja Komputer} {Minimalis|Aesthetic|Modern}".
+2. Buat "seo_desc": Deskripsi persuasif (min 2 paragraf) berisi kata kunci, ditulis menggunakan Spintax di setiap kalimat agar teksnya dinamis, dan sertakan maks 5 hashtag di akhir. Contoh: "{Ubah|Dekorasi|Tingkatkan} tampilan {ruang kerja|kamar tidur} Anda dengan...".
+3. Buat "master_prompt": SATU prompt bahasa Inggris utuh untuk AI Image Generator (Midjourney/ImageFX) yang mendeskripsikan subjek, detail, background, dan pencahayaan, ditulis menggunakan Spintax pada elemen visual utamanya (DILARANG keras menggunakan flag/parameter seperti --ar 9:16 atau 9:16). Contoh: "{minimalist wooden desk|modern industrial desk} with {black metal frame|solid steel legs} in a {cozy apartment|sunlit home office}...".
 
 Format HANYA JSON:
 {{
@@ -137,10 +139,12 @@ Format HANYA JSON:
         else:
             prompt_instruction = f"""
 Berdasarkan judul dasar produk/topik ini: "{basic_title}".
-Tugasmu adalah:
-1. Buat "seo_title": Judul Clickbait yang dioptimalkan untuk pencarian Pinterest.
-2. Buat "seo_desc": Deskripsi panjang (min 2 paragraf) yang persuasif, mengandung kata kunci relevan, dan SERTAKAN hashtag yang relevan di akhir (MAKSIMAL 5 hashtag).
-3. Buat "master_prompt": SATU prompt utuh dalam bahasa Inggris untuk menggenerate gambar estetik terkait topik ini di AI Image Generator (Midjourney/ImageFX). Prompt harus mendeskripsikan subjek, detail pakaian/warna, background estetik, dan quality/pencahayaan, semuanya digabung jadi satu kalimat/paragraf panjang (DILARANG menggunakan flag/parameter rasio seperti --ar 9:16 atau 9:16).
+Tugasmu adalah membuat template Spintax agar hasilnya selalu bervariasi setiap kali di-spin. Gunakan format tradisional Spintax {opsi1|opsi2|opsi3} pada kata atau frasa kunci di semua bagian.
+
+Tugas spesifik:
+1. Buat "seo_title": Judul Clickbait Pinterest yang kaya variasi kata kunci dalam format Spintax. Contoh: "{Spill|Bocoran|Rekomendasi} {Meja Kerja|Meja Komputer} {Minimalis|Aesthetic|Modern}".
+2. Buat "seo_desc": Deskripsi persuasif (min 2 paragraf) berisi kata kunci, ditulis menggunakan Spintax di setiap kalimat agar teksnya dinamis, dan sertakan maks 5 hashtag di akhir. Contoh: "{Ubah|Dekorasi|Tingkatkan} tampilan {ruang kerja|kamar tidur} Anda dengan...".
+3. Buat "master_prompt": SATU prompt bahasa Inggris utuh untuk AI Image Generator (Midjourney/ImageFX) yang mendeskripsikan subjek, detail, background, dan pencahayaan, ditulis menggunakan Spintax pada elemen visual utamanya (DILARANG keras menggunakan flag/parameter seperti --ar 9:16 atau 9:16). Contoh: "{minimalist wooden desk|modern industrial desk} with {black metal frame|solid steel legs} in a {cozy apartment|sunlit home office}...".
 
 Format HANYA JSON:
 {{

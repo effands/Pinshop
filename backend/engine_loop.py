@@ -46,6 +46,9 @@ async def autopilot_loop(logger_func):
             if not prompt:
                 prompt = raw_prompt
                 
+            from .spintax import parse_spintax
+            prompt = parse_spintax(prompt)
+                
             if not prompt or prompt.strip(".") == "":
                 logger_func("[Warning] Master Prompt masih kosong atau tidak valid! Harap isi/generate Master Prompt terlebih dahulu di tab Studio.")
                 await asyncio.sleep(15)
@@ -222,6 +225,10 @@ async def autopilot_loop(logger_func):
                 pin_desc = seo_desc
             else:
                 pin_desc = f"{pin_title}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
+
+            from .spintax import parse_spintax
+            pin_title = parse_spintax(pin_title)
+            pin_desc = parse_spintax(pin_desc)
 
             from .social.pinterest import upload_to_pinterest
             upload_success = await upload_to_pinterest(
