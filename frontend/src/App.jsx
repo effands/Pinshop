@@ -1357,7 +1357,7 @@ function App() {
                     <button 
                       type="button"
                       className="btn btn-outline" 
-                      style={{padding: '6px 16px', fontSize: '13px', borderColor: 'var(--primary)', color: 'var(--primary)'}}
+                      style={{padding: '6px 16px', fontSize: '13px'}}
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
