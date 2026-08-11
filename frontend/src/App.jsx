@@ -1618,61 +1618,9 @@ function App() {
               <XCircle size={22} />
             </button>
 
-            {/* Left Nav Arrow */}
-            {previewIndex > 0 && (
-              <button 
-                onClick={() => setPreviewIndex(previewIndex - 1)}
-                style={{
-                  position: 'absolute',
-                  left: '30px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: 'none',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '56px',
-                  height: '56px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 10010,
-                  transition: 'all 0.2s'
-                }}
-                title="Previous (Left Arrow)"
-              >
-                <span style={{fontSize: '24px', fontWeight: 'bold'}}>‹</span>
-              </button>
-            )}
-
-            {/* Right Nav Arrow */}
-            {previewIndex < galleryFiles.length - 1 && (
-              <button 
-                onClick={() => setPreviewIndex(previewIndex + 1)}
-                style={{
-                  position: 'absolute',
-                  right: '30px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: 'none',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '56px',
-                  height: '56px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 10010,
-                  transition: 'all 0.2s'
-                }}
-                title="Next (Right Arrow)"
-              >
-                <span style={{fontSize: '24px', fontWeight: 'bold'}}>›</span>
-              </button>
-            )}
-
             {/* Media Content Box */}
             <div style={{
-              maxWidth: '80%',
+              maxWidth: '85%',
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
@@ -1680,33 +1628,99 @@ function App() {
               justifyContent: 'center',
               gap: '16px'
             }}>
-              {file.type === 'video' ? (
-                <video 
-                  src={`http://127.0.0.1:8001${file.url}`} 
-                  controls 
-                  autoPlay
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '70vh',
-                    borderRadius: '16px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                  }}
-                />
-              ) : (
-                <img 
-                  src={`http://127.0.0.1:8001${file.url}`} 
-                  alt={file.filename} 
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '70vh',
-                    borderRadius: '16px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    objectFit: 'contain'
-                  }}
-                />
-              )}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Left Nav Arrow */}
+                {previewIndex > 0 && (
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewIndex(previewIndex - 1)
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: '-70px',
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '48px',
+                      height: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 10020,
+                      backdropFilter: 'blur(4px)',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Previous (Left Arrow)"
+                  >
+                    <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>‹</span>
+                  </button>
+                )}
+
+                {/* Right Nav Arrow */}
+                {previewIndex < galleryFiles.length - 1 && (
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewIndex(previewIndex + 1)
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '-70px',
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '48px',
+                      height: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 10020,
+                      backdropFilter: 'blur(4px)',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Next (Right Arrow)"
+                  >
+                    <span style={{fontSize: '24px', fontWeight: 'bold', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>›</span>
+                  </button>
+                )}
+
+                {file.type === 'video' ? (
+                  <video 
+                    src={`http://127.0.0.1:8001${file.url}`} 
+                    controls 
+                    autoPlay
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '70vh',
+                      borderRadius: '16px',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                  />
+                ) : (
+                  <img 
+                    src={`http://127.0.0.1:8001${file.url}`} 
+                    alt={file.filename} 
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '70vh',
+                      borderRadius: '16px',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      objectFit: 'contain'
+                    }}
+                  />
+                )}
+              </div>
 
               {/* Caption metadata */}
               <div style={{textAlign: 'center', color: 'rgba(255,255,255,0.8)'}}>
@@ -1728,7 +1742,7 @@ function App() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(15, 23, 42, 0.75)',
+          background: 'rgba(15, 23, 42, 0.85)',
           backdropFilter: 'blur(10px)',
           zIndex: 20000,
           display: 'flex',
@@ -1736,13 +1750,13 @@ function App() {
           justifyContent: 'center'
         }}>
           <div style={{
-            background: 'var(--panel-bg)',
-            border: '1px solid var(--panel-border)',
+            background: '#151c2c',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '24px',
             width: '420px',
             padding: '30px',
             textAlign: 'center',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -1763,15 +1777,25 @@ function App() {
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
               <h3 style={{margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#fff'}}>Konfirmasi Tindakan</h3>
-              <p style={{margin: 0, fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5'}}>{confirmModal.message}</p>
+              <p style={{margin: 0, fontSize: '14px', color: '#cbd5e1', lineHeight: '1.5'}}>{confirmModal.message}</p>
             </div>
 
             <div style={{display: 'flex', gap: '12px', width: '100%', marginTop: '10px'}}>
               <button 
                 type="button"
-                className="btn btn-outline" 
+                className="btn" 
                 onClick={() => setConfirmModal({ show: false, message: '', onConfirm: null })}
-                style={{flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', borderColor: 'var(--panel-border)'}}
+                style={{
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  fontSize: '14px', 
+                  fontWeight: 'bold', 
+                  color: '#fff', 
+                  background: 'rgba(255,255,255,0.08)', 
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  cursor: 'pointer'
+                }}
               >
                 Batal
               </button>
@@ -1779,7 +1803,14 @@ function App() {
                 type="button"
                 className="btn btn-danger" 
                 onClick={confirmModal.onConfirm}
-                style={{flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold'}}
+                style={{
+                  flex: 1, 
+                  padding: '12px', 
+                  borderRadius: '12px', 
+                  fontSize: '14px', 
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
               >
                 Ya, Lanjutkan
               </button>
