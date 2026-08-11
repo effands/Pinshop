@@ -192,12 +192,17 @@ async def get_config():
                 pass
     return {}
 
+from typing import Dict, Any, List, Optional
+
 class QueueItem(BaseModel):
     id: str
     basicTitle: str
     spintaxLinks: str
     referenceImages: List[str]
     status: str = "pending"
+    seoTitle: Optional[str] = None
+    seoDesc: Optional[str] = None
+    masterPrompt: Optional[str] = None
 
 @app.get("/api/queue")
 async def get_queue_list():

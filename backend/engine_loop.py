@@ -51,26 +51,35 @@ async def autopilot_loop(logger_func):
                 with open(settings.SETTINGS_FILE, "w") as f:
                     json.dump(config, f, indent=4)
                 
-                logger_func("> Menghubungi Gemini AI untuk meracik SEO & Prompt Spintax...")
-                from .gemini_manager import manager as gemini_manager
-                try:
-                    res = gemini_manager.generate_seo_and_prompt(
-                        active_queue_item.get("basicTitle", ""),
-                        active_queue_item.get("referenceImages", [])
-                    )
-                    seo_title = res.get("seo_title", "")
-                    seo_desc = res.get("seo_desc", "")
-                    raw_prompt = res.get("master_prompt", "")
+                # If custom SEO metadata is already stored in the queue item, use it directly!
+                if active_queue_item.get("seoTitle") and active_queue_item.get("masterPrompt"):
+                    logger_func("> Menggunakan SEO & Prompt kustom yang sudah tersimpan di antrean.")
+                    seo_title = active_queue_item.get("seoTitle", "")
+                    seo_desc = active_queue_item.get("seoDesc", "")
+                    raw_prompt = active_queue_item.get("masterPrompt", "")
                     reference_images = active_queue_item.get("referenceImages", [])
                     link = active_queue_item.get("spintaxLinks", "")
-                    logger_func("> Gemini sukses meracik data untuk antrean ini.")
-                except Exception as ge:
-                    logger_func(f"[Error] Gemini gagal memproses antrean: {ge}")
-                    active_queue_item["status"] = "failed"
-                    with open(settings.SETTINGS_FILE, "w") as f:
-                        json.dump(config, f, indent=4)
-                    await asyncio.sleep(10)
-                    continue
+                else:
+                    logger_func("> Menghubungi Gemini AI untuk meracik SEO & Prompt Spintax...")
+                    from .gemini_manager import manager as gemini_manager
+                    try:
+                        res = gemini_manager.generate_seo_and_prompt(
+                            active_queue_item.get("basicTitle", ""),
+                            active_queue_item.get("referenceImages", [])
+                        )
+                        seo_title = res.get("seo_title", "")
+                        seo_desc = res.get("seo_desc", "")
+                        raw_prompt = res.get("master_prompt", "")
+                        reference_images = active_queue_item.get("referenceImages", [])
+                        link = active_queue_item.get("spintaxLinks", "")
+                        logger_func("> Gemini sukses meracik data untuk antrean ini.")
+                    except Exception as ge:
+                        logger_func(f"[Error] Gemini gagal memproses antrean: {ge}")
+                        active_queue_item["status"] = "failed"
+                        with open(settings.SETTINGS_FILE, "w") as f:
+                            json.dump(config, f, indent=4)
+                        await asyncio.sleep(10)
+                        continue
             else:
                 # Manual Studio post mode
                 seo_title = config.get("seoTitle", "")
