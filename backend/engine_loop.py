@@ -192,12 +192,35 @@ async def autopilot_loop(logger_func):
                     # Lanjut tanpa reference image
                     ref_media_id = None
 
+            selected_video_ratio = config.get("videoRatio", "9:16")
+            selected_video_duration = int(config.get("videoDuration", "10s").replace("s", ""))
+            
+            image_ratio_map = {
+                "16:9": "landscape",
+                "4:3": "4x3",
+                "1:1": "square",
+                "3:4": "3x4",
+                "9:16": "portrait"
+            }
+            selected_image_ratio = image_ratio_map.get(config.get("imageRatio", "9:16"), "portrait")
+
             if media_type == "video":
-                logger_func("> Meminta Google Flow merender VIDEO Mahakarya HD...")
+                logger_func(f"> Meminta Google Flow merender VIDEO ({selected_video_ratio}, {selected_video_duration}s) Mahakarya HD...")
                 if ref_media_id:
-                    results = await generate_video_i2v(bridge, prompt, aspect="9:16", project_id=project_id, image_media_id=ref_media_id)
+                    results = await generate_video_i2v(
+                        bridge, prompt, 
+                        aspect=selected_video_ratio, 
+                        project_id=project_id, 
+                        image_media_id=ref_media_id,
+                        duration=selected_video_duration
+                    )
                 else:
-                    results = await generate_video(bridge, prompt, aspect="9:16", project_id=project_id)
+                    results = await generate_video(
+                        bridge, prompt, 
+                        aspect=selected_video_ratio, 
+                        project_id=project_id,
+                        duration=selected_video_duration
+                    )
                 
                 if not results:
                     logger_func("[Error] Gagal merender video dari Flow.")
@@ -215,7 +238,7 @@ async def autopilot_loop(logger_func):
                 while remaining > 0:
                     current_batch = min(4, remaining)
                     logger_func(f"> Mengirim batch ke-{batch_idx} ({current_batch} gambar) ke Google Flow...")
-                    batch_results = await generate_image(bridge, prompt, aspect="portrait", project_id=project_id, count=current_batch, ref_media_ids=ref_media_ids)
+                    batch_results = await generate_image(bridge, prompt, aspect=selected_image_ratio, project_id=project_id, count=current_batch, ref_media_ids=ref_media_ids)
                     if batch_results:
                         results.extend(batch_results)
                         logger_func(f"  Batch ke-{batch_idx} sukses. Total terkumpul: {len(results)} gambar.")
