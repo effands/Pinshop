@@ -55,6 +55,18 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                 link_input = page.locator("input#WebsiteField, input[id*='WebsiteField'], input[placeholder*='Add a link'], input[placeholder*='tautan' i], input[placeholder*='link' i]").first
                 if await link_input.is_visible():
                     await link_input.fill(link)
+            # Toggle AI disclosure label if available
+            try:
+                ai_switch = page.locator("input[name*='ai-disclosure-switch'], [data-test-id='ai-disclosure-switch'] input, input#pin-creation-ai-disclosure-switch").first
+                if await ai_switch.is_visible():
+                    is_checked = await ai_switch.is_checked()
+                    if not is_checked:
+                        log("> Mencentang label 'Mark as AI-Modified' (Dibuat dengan AI)...")
+                        # Click the parent label or the switch container to toggle it safely
+                        await ai_switch.click()
+            except Exception as e:
+                log(f"[Warning] Gagal mencentang label AI: {e}")
+
             log("> Menekan tombol Terbitkan (Publish)...")
             publish_clicked = False
             for btn_name in ["Publish", "Terbitkan", "Simpan", "Save"]:
