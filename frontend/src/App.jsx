@@ -1953,7 +1953,7 @@ function App() {
 
                   {file.type === 'video' ? (
                     <video 
-                      src={`http://127.0.0.1:8001${file.url}`} 
+                      src={`http://127.0.0.1:8015${file.url}`} 
                       controls 
                       autoPlay
                       style={{
@@ -1967,7 +1967,7 @@ function App() {
                     />
                   ) : (
                     <img 
-                      src={`http://127.0.0.1:8001${file.url}`} 
+                      src={`http://127.0.0.1:8015${file.url}`} 
                       alt={file.filename} 
                       style={{
                         maxWidth: '100%',
