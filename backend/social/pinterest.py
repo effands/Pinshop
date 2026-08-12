@@ -112,21 +112,26 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
             # Toggle AI disclosure label if available
             try:
                 ai_switch = page.locator("input[name*='ai-disclosure-switch'], [data-test-id='ai-disclosure-switch'] input, input#pin-creation-ai-disclosure-switch").first
-                if await ai_switch.is_visible():
+                if await ai_switch.is_attached():
+                    await ai_switch.evaluate("node => node.disabled = false")
                     is_checked = await ai_switch.is_checked()
                     if not is_checked:
                         log("> Mencentang label 'Mark as AI-Modified' (Dibuat dengan AI)...")
-                        await ai_switch.click()
+                        await ai_switch.check(force=True)
                         await page.wait_for_timeout(1000)
 
                 # Check "This Pin includes an AI-generated person"
                 ai_person = page.locator("input[name*='disclosure-person'], input[id*='disclosure-person'], label:has-text('AI-generated person') input, label:has-text('person') input").first
-                if not await ai_person.is_visible():
+                if not await ai_person.is_attached():
                     ai_person = page.locator("label:has-text('This Pin includes an AI-generated person'), span:has-text('includes an AI-generated person')").first
                 
-                if await ai_person.is_visible():
+                if await ai_person.is_attached():
                     log("> Mencentang label 'This Pin includes an AI-generated person'...")
-                    await ai_person.click()
+                    try:
+                        await ai_person.evaluate("node => node.disabled = false")
+                    except Exception:
+                        pass
+                    await ai_person.click(force=True)
             except Exception as e:
                 log(f"[Warning] Gagal mencentang label AI: {e}")
 
