@@ -119,15 +119,18 @@ Lihat {len(images_base64)} gambar produk/referensi ini dan judul dasarnya: "{bas
 WAJIB DAN MUTLAK: Seluruh teks output (seo_title, seo_desc, master_prompt) HARUS ditulis menggunakan format tradisional Spintax {{opsi1|opsi2|opsi3}} pada kata atau frasa kunci di dalamnya agar hasilnya selalu bervariasi setiap kali di-spin. Dilarang keras menghasilkan teks polos tanpa Spintax!
 
 Tugas spesifik:
-1. Buat "seo_title": Judul Pinterest SEO-LSI Clickbait yang PANJANG (antara 70 hingga 100 karakter). Harus sangat kaya akan kata kunci pencarian utama Pinterest yang relevan dengan topik, digabung dengan hook emosional/clickbait. Judul harus menjejalkan kata kunci utama dan kata kunci turunan sekaligus (seperti: rekomendasi shopee, racun shopee, shopee haul, ide dekorasi, harga murah, estetik, dll).
+1. Buat "seo_title": Judul Pinterest SEO-LSI Clickbait yang PANJANG (antara 70 hingga 100 karakter). Harus sangat kaya akan kata kunci pencarian utama Pinterest yang relevan dengan topik, digabung dengan hook emosional/clickbait.
+DILARANG KERAS DAN DIHARAMKAN menggunakan kata "shopee", "racun", atau nama brand e-commerce lainnya di dalam judul. Orang di Pinterest mencari inspirasi desain, ide, dan estetika, bukan brand marketplace.
+Fokus pada kata kunci LSI pencarian Pinterest seperti: ide dekorasi, inspirasi setup, desain interior, gaya minimalis, estetik, modern scandinavian, dll.
 Wajib menggunakan format Spintax yang padat.
-Contoh format ideal: "{{Spill|Racun Shopee|Rekomendasi Shopee|Shopee Haul}} {{Meja Belajar|Meja Kerja|Meja Komputer}} {{Minimalis|Aesthetic|Kayu Kokoh}} {{Mulai 100 Ribuan|Murah Lebay|Diskon Gede}} {{Bikin Betah|Estetik Parah|Auto Rapi}}"
+Contoh format ideal: "{{Inspirasi Setup|Ide Dekorasi|Desain Ruang Kerja|Rekomendasi Meja}} {{Minimalis|Aesthetic|Modern Scandinavian|Kayu Kokoh}} {{Kamar Sempit|Studio Minimalis|Home Office Cozy}} {{Bikin Betah|Setup Impian|Auto Rapi|Tampil Mewah}}"
 
 2. Buat "seo_desc": Deskripsi persuasif yang PANJANG dan sangat kaya SEO (minimal 3 paragraf). Jejali dengan kata kunci utama, kata kunci LSI, serta pertanyaan retoris pembuka yang menarik minat klik. 
-- Paragraf 1: Pengenalan produk, masalah yang diselesaikan, dan keyword LSI (misal: dekorasi kamar, cara merapikan meja, dll).
+DILARANG KERAS menggunakan kata "shopee" atau "racun shopee" di dalam teks deskripsi maupun hashtag.
+- Paragraf 1: Pengenalan produk, masalah yang diselesaikan, dan keyword LSI (misal: dekorasi kamar, inspirasi ruangan, dll).
 - Paragraf 2: Keunggulan detail produk (desain, material, daya tahan) dengan keyword relevan.
-- Paragraf 3: Call to Action (CTA) ajakan wajib untuk klik link afiliasi Shopee (Contoh: "Klik link Shopee di bawah ini untuk beli langsung/cek harganya! 👇✨").
-- Di bagian paling bawah deskripsi, tambahkan tepat 5-8 hashtag populer dan tertarget (misal: #RacunShopee #MejaBelajar #ShopeeHaul #DesainKamar #PinterestAesthetic).
+- Paragraf 3: Call to Action (CTA) ajakan wajib untuk klik link di bawah (Contoh: "Klik link produk di bawah ini untuk melihat detail produk atau membelinya langsung! 👇✨").
+- Di bagian paling bawah deskripsi, tambahkan tepat 5-8 hashtag populer dan tertarget di Pinterest (misal: #InspirasiDekorasi #DesainInterior #SetupWorkspace #AestheticHome #MinimalistDesign #IdeKamar).
 Seluruh bagian kalimat di deskripsi harus menggunakan Spintax yang bervariasi tinggi agar hasil spin selalu unik!
 
 3. Buat "master_prompt": SATU prompt bahasa Inggris utuh untuk AI Image Generator (Midjourney/ImageFX) yang mendeskripsikan subjek, detail, background, dan pencahayaan, ditulis menggunakan Spintax pada elemen visual utamanya (DILARANG keras menggunakan flag/parameter seperti --ar 9:16 atau 9:16). Contoh: "{{minimalist wooden desk|modern industrial desk}} with {{black metal frame|solid steel legs}} in a {{cozy apartment|sunlit home office}}...".
@@ -159,23 +162,26 @@ Format HANYA JSON:
         else:
             prompt_instruction = f"""
 Berdasarkan judul dasar produk/topik ini: "{basic_title}".
-
+ 
 WAJIB DAN MUTLAK: Seluruh teks output (seo_title, seo_desc, master_prompt) HARUS ditulis menggunakan format tradisional Spintax {{opsi1|opsi2|opsi3}} pada kata atau frasa kunci di dalamnya agar hasilnya selalu bervariasi setiap kali di-spin. Dilarang keras menghasilkan teks polos tanpa Spintax!
-
+ 
 Tugas spesifik:
-1. Buat "seo_title": Judul Pinterest SEO-LSI Clickbait yang PANJANG (antara 70 hingga 100 karakter). Harus sangat kaya akan kata kunci pencarian utama Pinterest yang relevan dengan topik, digabung dengan hook emosional/clickbait. Judul harus menjejalkan kata kunci utama dan kata kunci turunan sekaligus (seperti: rekomendasi shopee, racun shopee, shopee haul, ide dekorasi, harga murah, estetik, dll).
+1. Buat "seo_title": Judul Pinterest SEO-LSI Clickbait yang PANJANG (antara 70 hingga 100 karakter). Harus sangat kaya akan kata kunci pencarian utama Pinterest yang relevan dengan topik, digabung dengan hook emosional/clickbait.
+DILARANG KERAS DAN DIHARAMKAN menggunakan kata "shopee", "racun", atau nama brand e-commerce lainnya di dalam judul. Orang di Pinterest mencari inspirasi desain, ide, dan estetika, bukan brand marketplace.
+Fokus pada kata kunci LSI pencarian Pinterest seperti: ide dekorasi, inspirasi setup, desain interior, gaya minimalis, estetik, modern scandinavian, dll.
 Wajib menggunakan format Spintax yang padat.
-Contoh format ideal: "{{Spill|Racun Shopee|Rekomendasi Shopee|Shopee Haul}} {{Meja Belajar|Meja Kerja|Meja Komputer}} {{Minimalis|Aesthetic|Kayu Kokoh}} {{Mulai 100 Ribuan|Murah Lebay|Diskon Gede}} {{Bikin Betah|Estetik Parah|Auto Rapi}}"
-
+Contoh format ideal: "{{Inspirasi Setup|Ide Dekorasi|Desain Ruang Kerja|Rekomendasi Meja}} {{Minimalis|Aesthetic|Modern Scandinavian|Kayu Kokoh}} {{Kamar Sempit|Studio Minimalis|Home Office Cozy}} {{Bikin Betah|Setup Impian|Auto Rapi|Tampil Mewah}}"
+ 
 2. Buat "seo_desc": Deskripsi persuasif yang PANJANG dan sangat kaya SEO (minimal 3 paragraf). Jejali dengan kata kunci utama, kata kunci LSI, serta pertanyaan retoris pembuka yang menarik minat klik. 
-- Paragraf 1: Pengenalan produk, masalah yang diselesaikan, dan keyword LSI (misal: dekorasi kamar, cara merapikan meja, dll).
+DILARANG KERAS menggunakan kata "shopee" atau "racun shopee" di dalam teks deskripsi maupun hashtag.
+- Paragraf 1: Pengenalan produk, masalah yang diselesaikan, dan keyword LSI (misal: dekorasi kamar, inspirasi ruangan, dll).
 - Paragraf 2: Keunggulan detail produk (desain, material, daya tahan) dengan keyword relevan.
-- Paragraf 3: Call to Action (CTA) ajakan wajib untuk klik link afiliasi Shopee (Contoh: "Klik link Shopee di bawah ini untuk beli langsung/cek harganya! 👇✨").
-- Di bagian paling bawah deskripsi, tambahkan tepat 5-8 hashtag populer dan tertarget (misal: #RacunShopee #MejaBelajar #ShopeeHaul #DesainKamar #PinterestAesthetic).
+- Paragraf 3: Call to Action (CTA) ajakan wajib untuk klik link di bawah (Contoh: "Klik link produk di bawah ini untuk melihat detail produk atau membelinya langsung! 👇✨").
+- Di bagian paling bawah deskripsi, tambahkan tepat 5-8 hashtag populer dan tertarget di Pinterest (misal: #InspirasiDekorasi #DesainInterior #SetupWorkspace #AestheticHome #MinimalistDesign #IdeKamar).
 Seluruh bagian kalimat di deskripsi harus menggunakan Spintax yang bervariasi tinggi agar hasil spin selalu unik!
-
+ 
 3. Buat "master_prompt": SATU prompt bahasa Inggris utuh untuk AI Image Generator (Midjourney/ImageFX) yang mendeskripsikan subjek, detail, background, dan pencahayaan, ditulis menggunakan Spintax pada elemen visual utamanya (DILARANG keras menggunakan flag/parameter seperti --ar 9:16 atau 9:16). Contoh: "{{minimalist wooden desk|modern industrial desk}} with {{black metal frame|solid steel legs}} in a {{cozy apartment|sunlit home office}}...".
-
+ 
 Format HANYA JSON:
 {{
     "seo_title": "Judul Pinterest",
