@@ -105,6 +105,22 @@ async def lifespan(app: FastAPI):
     print("       PINSHOP EDITION - AUTO PINTEREST PIN")
     print("====================================================\n")
     send_log("[System] PinShop Engine Starting...")
+    if settings.SETTINGS_FILE.exists():
+        try:
+            with open(settings.SETTINGS_FILE, "r") as f:
+                config_data = json.load(f)
+            changed = False
+            for item in config_data.get("queue", []):
+                if item.get("status") == "running":
+                    item["status"] = "pending"
+                    changed = True
+            if changed:
+                with open(settings.SETTINGS_FILE, "w") as f:
+                    json.dump(config_data, f, indent=4)
+                send_log("[System] Menyetel ulang antrean yang sempat tertahan kembali ke status PENDING.")
+        except Exception as e:
+            print(f"Failed to self-heal queue items: {e}")
+            
     try:
         await init_bridge()
         send_log("[System] Google Flow Extension Bridge initialized.")

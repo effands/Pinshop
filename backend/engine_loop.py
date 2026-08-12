@@ -55,6 +55,23 @@ async def autopilot_loop(logger_func):
                 active_queue_item["status"] = "running"
                 with open(settings.SETTINGS_FILE, "w") as f:
                     json.dump(config, f, indent=4)
+                    
+            def update_queue_status(status_str: str):
+                if not is_queue_mode or not active_queue_item:
+                    return
+                active_queue_item["status"] = status_str
+                try:
+                    if settings.SETTINGS_FILE.exists():
+                        with open(settings.SETTINGS_FILE, "r") as f:
+                            fresh_config = json.load(f)
+                        for i in fresh_config.get("queue", []):
+                            if i.get("id") == active_queue_item["id"]:
+                                i["status"] = status_str
+                        with open(settings.SETTINGS_FILE, "w") as f:
+                            json.dump(fresh_config, f, indent=4)
+                    logger_func(f"[Queue] Status antrean diupdate: {status_str.upper()}")
+                except Exception as err:
+                    logger_func(f"[Warning] Gagal mengupdate status antrean: {err}")
                 
                 # If custom SEO metadata is already stored in the queue item, use it directly!
                 if active_queue_item.get("seoTitle") and active_queue_item.get("masterPrompt"):
@@ -130,6 +147,8 @@ async def autopilot_loop(logger_func):
             # Wait for bridge
             if status_snapshot()["state"] != "ready":
                 logger_func("[Warning] Bridge Google Flow belum ready!")
+                if is_queue_mode:
+                    update_queue_status("failed")
                 await asyncio.sleep(10)
                 continue
             
@@ -155,6 +174,8 @@ async def autopilot_loop(logger_func):
 
             if not project_id:
                 logger_func("[Warning] Project ID Google Flow belum terdeteksi! Pastikan tab project Google Flow terbuka di Chrome.")
+                if is_queue_mode:
+                    update_queue_status("failed")
                 await asyncio.sleep(10)
                 continue
             
@@ -266,6 +287,8 @@ async def autopilot_loop(logger_func):
                 
                 if not results:
                     logger_func("[Error] Gagal merender gambar sama sekali dari Flow.")
+                    if is_queue_mode:
+                        update_queue_status("failed")
                     await asyncio.sleep(30)
                     continue
                 logger_func(f"> Total {len(results)} gambar berhasil dirender oleh Google Flow!")
@@ -275,6 +298,8 @@ async def autopilot_loop(logger_func):
             account_name = config.get("targetAccount")
             if not account_name:
                 logger_func("[Error] Tidak ada akun target Pinterest yang dipilih.")
+                if is_queue_mode:
+                    update_queue_status("failed")
                 await asyncio.sleep(30)
                 continue
 
