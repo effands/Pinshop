@@ -112,7 +112,7 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
             # Toggle AI disclosure label if available
             try:
                 ai_switch = page.locator("input[name*='ai-disclosure-switch'], [data-test-id='ai-disclosure-switch'] input, input#pin-creation-ai-disclosure-switch").first
-                if await ai_switch.is_attached():
+                if await ai_switch.count() > 0:
                     await ai_switch.evaluate("node => node.disabled = false")
                     is_checked = await ai_switch.is_checked()
                     if not is_checked:
@@ -122,10 +122,10 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
 
                 # Check "This Pin includes an AI-generated person"
                 ai_person = page.locator("input[name*='disclosure-person'], input[id*='disclosure-person'], label:has-text('AI-generated person') input, label:has-text('person') input").first
-                if not await ai_person.is_attached():
+                if await ai_person.count() == 0:
                     ai_person = page.locator("label:has-text('This Pin includes an AI-generated person'), span:has-text('includes an AI-generated person')").first
                 
-                if await ai_person.is_attached():
+                if await ai_person.count() > 0:
                     log("> Mencentang label 'This Pin includes an AI-generated person'...")
                     try:
                         await ai_person.evaluate("node => node.disabled = false")
