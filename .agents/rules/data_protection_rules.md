@@ -12,6 +12,10 @@ Setiap kali melakukan operasi baca/tulis ke file konfigurasi atau database flat-
   Pisahkan data konfigurasi statis (seperti waktu jeda, tipe media) dengan data dinamis/antrean (seperti antrean produk, status akun). Jika memungkinkan, simpan di file terpisah (misal settings.json vs queue.json) untuk meminimalkan risiko kontaminasi state akibat kegagalan penulisan.
 * **Auto-Recovery on Corrupted JSON**: 
   Jika file JSON rusak atau gagal di-parse saat dibaca, buat mekanisme backup otomatis (misal: .bak) sebelum menulis ulang file baru dengan template default. Jangan biarkan aplikasi crash hanya karena kegagalan parser JSON.
+* **Cara Reset File yang Aman**:
+  Jika ingin memulihkan template konfigurasi default untuk debugging, salin konten default ke file baru (misal `settings.json.example`) daripada langsung menimpa file aktif `settings.json` milik pengguna.
+* **Kewajiban Pengujian Kode Mandiri (Failsafe Testing)**:
+  Setiap kali Agen AI selesai melakukan modifikasi kode (terutama python/javascript/batch script), agen WAJIB melakukan pengujian sintaksis secara mandiri sebelum menyatakan pekerjaan selesai. Untuk Python, selalu lakukan verifikasi dengan menjalankan modul/file yang diubah (misal `python -m backend.main`) untuk menjamin tidak ada SyntaxError atau ImportError. Dilarang keras menyerahkan hasil kode yang belum divalidasi ke pengguna untuk meminimalkan trial-error yang tidak efisien.
 
 ---
 
