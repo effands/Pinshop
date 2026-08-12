@@ -55,19 +55,45 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
             await page.wait_for_timeout(2000)
             log(f"> Mengisi Judul: {title[:40]}...")
             title_input = page.locator("input[id*='storyboard-selector-title'], input[placeholder*='Tell everyone'], input[placeholder*='Judul' i], input[placeholder*='title' i]").first
-            if await title_input.is_visible():
-                await title_input.fill(title)
+            
+            # Pinterest sometimes disables the title input briefly during upload
+            try:
+                await title_input.wait_for(state="attached", timeout=5000)
+                # Force enable if disabled
+                await title_input.evaluate("node => node.disabled = false")
+                await page.wait_for_timeout(500)
+                await title_input.fill(title, force=True)
+            except Exception as e:
+                log(f"[Warning] Gagal mengisi judul secara normal: {e}")
                 
             log("> Mengisi Deskripsi & Hashtag SEO...")
-            desc_input = page.locator("[data-test-id='storyboard-description-field-container'] div[contenteditable='true'], div[contenteditable='true'][aria-label*='Describe'], div[contenteditable='true'][aria-label*='Deskripsikan'], div[contenteditable='true'][aria-label*='description' i], textarea[id*='description']").first
-            if await desc_input.is_visible():
-                await desc_input.fill(description)
+            desc_input = page.locator("div[role='textbox'], div.public-DraftEditor-content, div[contenteditable='true'], textarea").nth(0)
+            try:
+                # Coba cari elemen yang paling mungkin jadi deskripsi (biasanya textbox pertama atau draft-editor)
+                desc_target = page.locator("div[role='textbox'], div.public-DraftEditor-content, div[aria-label*='Describe'], div[aria-label*='description' i], div[contenteditable='true']").first
+                await desc_target.wait_for(state="attached", timeout=5000)
+                await desc_target.click(force=True)
+                # Draft.js / Lexical Editor lebih aman diisi pakai keyboard.type daripada fill
+                await page.keyboard.type(description)
+            except Exception as e:
+                log(f"[Warning] Gagal mengisi deskripsi secara normal: {e}")
+                # Fallback brutal: cari semua contenteditable dan isi yang terakhir (karena biasanya title bukan contenteditable)
+                try:
+                    fallback = page.locator("div[contenteditable='true']").last
+                    await fallback.click(force=True)
+                    await page.keyboard.type(description)
+                except Exception:
+                    pass
                 
             if link:
                 log(f"> Menyisipkan Tautan Affiliate...")
                 link_input = page.locator("input#WebsiteField, input[id*='WebsiteField'], input[placeholder*='Add a link'], input[placeholder*='tautan' i], input[placeholder*='link' i]").first
-                if await link_input.is_visible():
-                    await link_input.fill(link)
+                try:
+                    await link_input.wait_for(state="attached", timeout=5000)
+                    await link_input.evaluate("node => node.disabled = false")
+                    await link_input.fill(link, force=True)
+                except Exception as e:
+                    log(f"[Warning] Gagal menyisipkan tautan affiliate: {e}")
             # Select Pinterest Board
             try:
                 board_btn = page.locator("[data-test-id='board-dropdown'], [data-test-id='board-selector'], button[aria-label*='Choose board'], button[aria-label*='Pilih papan'], div[aria-label*='Choose a board']").first

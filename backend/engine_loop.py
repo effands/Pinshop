@@ -20,6 +20,24 @@ async def autopilot_loop(logger_func):
     while _running:
         try:
             logger_func("\n[System] Checking schedule...")
+            
+            def update_queue_status(active_item, status_str: str):
+                if not active_item:
+                    return
+                active_item["status"] = status_str
+                try:
+                    if settings.SETTINGS_FILE.exists():
+                        with open(settings.SETTINGS_FILE, "r") as f:
+                            fresh_config = json.load(f)
+                        for i in fresh_config.get("queue", []):
+                            if i.get("id") == active_item["id"]:
+                                i["status"] = status_str
+                        with open(settings.SETTINGS_FILE, "w") as f:
+                            json.dump(fresh_config, f, indent=4)
+                    logger_func(f"[Queue] Status antrean diupdate: {status_str.upper()}")
+                except Exception as err:
+                    logger_func(f"[Warning] Gagal mengupdate status antrean: {err}")
+                    
             # We can implement time check here based on config.startTime / config.stopTime.
             # For simplicity, we just run.
             
@@ -36,10 +54,13 @@ async def autopilot_loop(logger_func):
             # Check for pending queue items first
             queue = config.get("queue", [])
             active_queue_item = None
+            target_category = config.get("targetCategory", "Semua")
             for idx, item in enumerate(queue):
                 if item.get("status") == "pending":
-                    active_queue_item = item
-                    break
+                    item_cat = item.get("category", "Default")
+                    if target_category == "Semua" or item_cat == target_category:
+                        active_queue_item = item
+                        break
 
             is_queue_mode = active_queue_item is not None
 
@@ -55,23 +76,6 @@ async def autopilot_loop(logger_func):
                 active_queue_item["status"] = "running"
                 with open(settings.SETTINGS_FILE, "w") as f:
                     json.dump(config, f, indent=4)
-                    
-            def update_queue_status(status_str: str):
-                if not is_queue_mode or not active_queue_item:
-                    return
-                active_queue_item["status"] = status_str
-                try:
-                    if settings.SETTINGS_FILE.exists():
-                        with open(settings.SETTINGS_FILE, "r") as f:
-                            fresh_config = json.load(f)
-                        for i in fresh_config.get("queue", []):
-                            if i.get("id") == active_queue_item["id"]:
-                                i["status"] = status_str
-                        with open(settings.SETTINGS_FILE, "w") as f:
-                            json.dump(fresh_config, f, indent=4)
-                    logger_func(f"[Queue] Status antrean diupdate: {status_str.upper()}")
-                except Exception as err:
-                    logger_func(f"[Warning] Gagal mengupdate status antrean: {err}")
                 
                 # If custom SEO metadata is already stored in the queue item, use it directly!
                 if active_queue_item.get("seoTitle") and active_queue_item.get("masterPrompt"):
@@ -148,7 +152,7 @@ async def autopilot_loop(logger_func):
             if status_snapshot()["state"] != "ready":
                 logger_func("[Warning] Bridge Google Flow belum ready!")
                 if is_queue_mode:
-                    update_queue_status("failed")
+                    update_queue_status(active_queue_item, "failed")
                 await asyncio.sleep(10)
                 continue
             
@@ -175,7 +179,7 @@ async def autopilot_loop(logger_func):
             if not project_id:
                 logger_func("[Warning] Project ID Google Flow belum terdeteksi! Pastikan tab project Google Flow terbuka di Chrome.")
                 if is_queue_mode:
-                    update_queue_status("failed")
+                    update_queue_status(active_queue_item, "failed")
                 await asyncio.sleep(10)
                 continue
             
@@ -227,93 +231,32 @@ async def autopilot_loop(logger_func):
                     # Lanjut tanpa reference image
                     ref_media_id = None
 
-            selected_video_ratio = config.get("videoRatio", "9:16")
+            selected_video_ratio = config.get("videoRatio", "16:9")
             selected_video_duration = int(config.get("videoDuration", "10s").replace("s", ""))
-            
-            image_ratio_map = {
-                "16:9": "landscape",
-                "4:3": "square",
-                "1:1": "square",
-                "3:4": "portrait",
-                "9:16": "portrait"
-            }
-            selected_image_ratio = image_ratio_map.get(config.get("imageRatio", "9:16"), "portrait")
+            selected_image_ratio = config.get("imageRatio", "9:16")
+            is_video = (media_type == "video")
 
-            if media_type == "video":
-                logger_func(f"> Meminta Google Flow merender VIDEO ({selected_video_ratio}, {selected_video_duration}s) Mahakarya HD...")
-                if ref_media_id:
-                    results = await generate_video_i2v(
-                        bridge, prompt, 
-                        aspect=selected_video_ratio, 
-                        project_id=project_id, 
-                        image_media_id=ref_media_id,
-                        duration=selected_video_duration
-                    )
-                else:
-                    results = await generate_video(
-                        bridge, prompt, 
-                        aspect=selected_video_ratio, 
-                        project_id=project_id,
-                        duration=selected_video_duration
-                    )
-                
-                if not results:
-                    logger_func("[Error] Gagal merender video dari Flow.")
-                    await asyncio.sleep(30)
-                    continue
-                media_files = [{"type": "video", "item": results[0]}]
-            else:
-                generate_count = int(config.get("generateCount", 1))
-                logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI (Total target: {generate_count}x)...")
-                ref_media_ids = [ref_media_id] if ref_media_id else None
-                
-                results = []
-                remaining = generate_count
-                batch_idx = 1
-                while remaining > 0:
-                    current_batch = min(4, remaining)
-                    logger_func(f"> Mengirim batch ke-{batch_idx} ({current_batch} gambar) ke Google Flow...")
-                    batch_results = await generate_image(bridge, prompt, aspect=selected_image_ratio, project_id=project_id, count=current_batch, ref_media_ids=ref_media_ids)
-                    if batch_results:
-                        results.extend(batch_results)
-                        logger_func(f"  Batch ke-{batch_idx} sukses. Total terkumpul: {len(results)} gambar.")
-                    else:
-                        logger_func(f"[Warning] Batch ke-{batch_idx} gagal merender.")
-                    
-                    remaining -= current_batch
-                    batch_idx += 1
-                    if remaining > 0:
-                        await asyncio.sleep(2) # Small safety delay between batches
-                
-                if not results:
-                    logger_func("[Error] Gagal merender gambar sama sekali dari Flow.")
-                    if is_queue_mode:
-                        update_queue_status("failed")
-                    await asyncio.sleep(30)
-                    continue
-                logger_func(f"> Total {len(results)} gambar berhasil dirender oleh Google Flow!")
-                media_files = [{"type": "image", "item": r} for r in results]
-
-            # Target Account
             account_name = config.get("targetAccount")
             if not account_name:
                 logger_func("[Error] Tidak ada akun target Pinterest yang dipilih.")
-                if is_queue_mode:
-                    update_queue_status("failed")
+                if is_queue_mode: update_queue_status(active_queue_item, "failed")
                 await asyncio.sleep(30)
                 continue
 
-            for idx, media_file in enumerate(media_files):
-                if not _running: break
-                
-                # 1. Download & Save to Gallery
+            upload_success = False
+
+            async def process_and_post(media_file, idx_label, total_label):
+                nonlocal upload_success
+                global _running
+                if not _running: return False
+
                 gallery_filename = None
                 if media_file["type"] == "video":
                     video_id = media_file["item"]
                     result_path = "storage/generated.mp4"
                     await download_video(bridge, video_id, result_path)
                     try:
-                        import shutil
+                        import shutil, os, time
                         os.makedirs("storage/gallery", exist_ok=True)
                         gallery_filename = f"gallery_{int(time.time())}.mp4"
                         shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
@@ -323,83 +266,53 @@ async def autopilot_loop(logger_func):
                     first_item = media_file["item"]
                     image_url = first_item.get("image_url") or first_item.get("url") or (first_item if isinstance(first_item, str) else "")
                     result_path = "storage/generated.png"
-                    logger_func(f"> Mengunduh file gambar HD ke-{idx+1} ke disk...")
+                    logger_func(f"> Mengunduh file gambar HD ke-{idx_label} ke disk...")
                     dl_ok = await download_image(bridge, image_url, result_path)
                     if not dl_ok:
-                        logger_func(f"[Warning] Gagal mengunduh gambar ke-{idx+1}.")
-                        continue
+                        logger_func(f"[Warning] Gagal mengunduh gambar ke-{idx_label}.")
+                        return False
                     else:
-                        logger_func(f"> File Foto HD ke-{idx+1} berhasil didownload.")
+                        logger_func(f"> File Foto HD ke-{idx_label} berhasil didownload.")
                         try:
-                            import shutil
+                            import shutil, os, time
                             os.makedirs("storage/gallery", exist_ok=True)
-                            gallery_filename = f"gallery_{int(time.time())}_{idx}.png"
+                            gallery_filename = f"gallery_{int(time.time())}_{idx_label}.png"
                             shutil.copy(result_path, f"storage/gallery/{gallery_filename}")
                         except Exception as e:
                             logger_func(f"[Warning] Gagal menyalin gambar ke gallery: {e}")
 
-                if gallery_filename:
-                    try:
-                        # using global json
-                        meta_file = f"storage/gallery/{gallery_filename}.json"
-                        with open(meta_file, "w", encoding="utf-8") as mf:
-                            json.dump({
-                                "filename": gallery_filename,
-                                "posted": False,
-                                "posted_title": None,
-                                "posted_desc": None,
-                                "posted_link": None,
-                                "posted_account": None,
-                                "posted_at": None,
-                                "prompt": prompt
-                            }, mf, indent=4)
-                    except Exception:
-                        pass
-
-                # 2. Prepare Pinterest Title and Description (with Spintax)
-                logger_func(f"> Menyiapkan posting Pinterest ({idx+1}/{len(media_files)}) untuk akun [{account_name}]...")
                 from .spintax import resolve_shopee_title, parse_spintax
                 product_name = resolve_shopee_title(link) if link else ""
+                
+                pt = seo_title if seo_title else (product_name if product_name and product_name != "Rekomendasi Produk Estetik" else ("Beautiful " + prompt.split(" ")[0] if prompt else "Aesthetic Pin"))
+                pd = seo_desc if seo_desc else f"{pt}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
 
-                if seo_title:
-                    pin_title = seo_title
-                elif product_name and product_name != "Rekomendasi Produk Estetik":
-                    pin_title = product_name
-                else:
-                    pin_title = "Beautiful " + prompt.split(" ")[0] if prompt else "Aesthetic Pin"
+                pt = parse_spintax(pt)
+                pd = parse_spintax(pd)
 
-                if seo_desc:
-                    pin_desc = seo_desc
-                else:
-                    pin_desc = f"{pin_title}. Dapatkan produk ini dengan klik link di bawah! ✨ #Rekomendasi #Shopee #Aesthetic"
-
-                # Parse Spintax fresh for each post!
-                pin_title = parse_spintax(pin_title)
-                pin_desc = parse_spintax(pin_desc)
-
-                # 3. Post to Pinterest
+                logger_func(f"> Menyiapkan posting Pinterest ({idx_label}/{total_label}) untuk akun [{account_name}]...")
                 from .social.pinterest import upload_to_pinterest
-                upload_success = await upload_to_pinterest(
+                ok = await upload_to_pinterest(
                     image_path=result_path,
-                    title=pin_title[:99],
-                    description=pin_desc[:499],
+                    title=pt[:99],
+                    description=pd[:499],
                     link=link,
                     account_name=account_name,
                     logger_func=logger_func
                 )
 
-                if upload_success:
-                    logger_func(f"✅ PIN BERHASIL DIPOSTING ({idx+1}/{len(media_files)}): [{account_name}] {pin_title[:30]}...")
+                if ok:
+                    upload_success = True
+                    logger_func(f"✅ PIN BERHASIL DIPOSTING ({idx_label}/{total_label}): [{account_name}] {pt[:30]}...")
                     if gallery_filename:
                         try:
-                            # using global json
                             meta_file = f"storage/gallery/{gallery_filename}.json"
                             with open(meta_file, "w", encoding="utf-8") as mf:
                                 json.dump({
                                     "filename": gallery_filename,
                                     "posted": True,
-                                    "posted_title": pin_title[:99],
-                                    "posted_desc": pin_desc[:499],
+                                    "posted_title": pt[:99],
+                                    "posted_desc": pd[:499],
                                     "posted_link": link,
                                     "posted_account": account_name,
                                     "posted_at": int(time.time()),
@@ -408,20 +321,81 @@ async def autopilot_loop(logger_func):
                         except Exception:
                             pass
                 else:
-                    logger_func(f"❌ PIN GAGAL ({idx+1}/{len(media_files)}): [{account_name}]")
+                    logger_func(f"❌ PIN GAGAL ({idx_label}/{total_label}): [{account_name}]")
+                return ok
 
-                # 4. Sleep interval between multiple posts
-                if idx < len(media_files) - 1:
-                    sleep_time = int(config.get("sleepInterval", 10))
-                    if sleep_time >= 60:
-                        logger_func(f"> Sleep Jeda: Beristirahat {sleep_time//60} menit sebelum posting berikutnya...")
-                    else:
-                        logger_func(f"> Sleep Jeda: Beristirahat {sleep_time} detik sebelum posting berikutnya...")
-                    for _ in range(sleep_time):
+            if is_video:
+                if ref_media_id:
+                    results = await generate_video_i2v(bridge, prompt, aspect=selected_video_ratio, project_id=project_id, image_media_id=ref_media_id, duration=selected_video_duration)
+                else:
+                    results = await generate_video(bridge, prompt, aspect=selected_video_ratio, project_id=project_id, duration=selected_video_duration)
+                
+                if not results:
+                    logger_func("[Error] Gagal merender video dari Flow.")
+                    if is_queue_mode: update_queue_status(active_queue_item, "failed")
+                    await asyncio.sleep(30)
+                    continue
+                
+                await process_and_post({"type": "video", "item": results[0]}, 1, 1)
+
+            else:
+                generate_count = int(config.get("generateCount", 1))
+                if is_queue_mode and active_queue_item.get("generateCount"):
+                    generate_count = int(active_queue_item.get("generateCount"))
+                logger_func(f"> Mengirim prompt ke Google Flow ImageFX AI (Total target: {generate_count}x)...")
+                ref_media_ids = [ref_media_id] if ref_media_id else None
+                
+                remaining = generate_count
+                batch_idx = 1
+                total_posted_idx = 0
+
+                while remaining > 0 and _running:
+                    current_batch = min(4, remaining)
+                    logger_func(f"> Mengirim batch ke-{batch_idx} ({current_batch} gambar) ke Google Flow...")
+                    try:
+                        batch_results = await generate_image(bridge, prompt, aspect=selected_image_ratio, project_id=project_id, count=current_batch, ref_media_ids=ref_media_ids)
+                    except Exception as e:
+                        logger_func(f"[Error] API Google Flow Error: {e}")
+                        if "UNSAFE" in str(e) or "invalid argument" in str(e).lower() or "400" in str(e):
+                            logger_func("[Error] Prompt diblokir oleh filter keamanan (Unsafe/Invalid). Membatalkan sisa batch untuk prompt ini...")
+                            if is_queue_mode: update_queue_status(active_queue_item, "failed")
+                            break # Skip this prompt entirely
+                        batch_results = None
+                    
+                    if not batch_results:
+                        logger_func(f"[Warning] Batch ke-{batch_idx} gagal merender.")
+                        remaining -= current_batch
+                        batch_idx += 1
+                        if remaining > 0: await asyncio.sleep(2)
+                        continue
+
+                    logger_func(f"  Batch ke-{batch_idx} sukses merender {len(batch_results)} gambar. Langsung memproses & posting...")
+                    
+                    for r in batch_results:
                         if not _running: break
-                        await asyncio.sleep(1)
+                        total_posted_idx += 1
+                        await process_and_post({"type": "image", "item": r}, total_posted_idx, generate_count)
+                        
+                        if remaining > 0 or total_posted_idx < generate_count:
+                            sleep_time = int(config.get("sleepInterval", 10))
+                            if sleep_time >= 60:
+                                logger_func(f"> Sleep Jeda: Beristirahat {sleep_time//60} menit sebelum memproses berikutnya...")
+                            else:
+                                logger_func(f"> Sleep Jeda: Beristirahat {sleep_time} detik sebelum memproses berikutnya...")
+                            for _ in range(sleep_time):
+                                if not _running: break
+                                await asyncio.sleep(1)
 
-            # If a queue item was processed, update its final status!
+                    remaining -= current_batch
+                    batch_idx += 1
+
+                if total_posted_idx == 0:
+                    logger_func("[Error] Gagal merender gambar sama sekali dari Flow.")
+                    if is_queue_mode: update_queue_status(active_queue_item, "failed")
+                    await asyncio.sleep(30)
+                    continue
+
+            # Update queue status
             if is_queue_mode:
                 active_queue_item["status"] = "success" if upload_success else "failed"
                 try:
@@ -437,6 +411,7 @@ async def autopilot_loop(logger_func):
                 except Exception as err:
                     logger_func(f"[Warning] Gagal mengupdate status antrean: {err}")
             
+
             # If a manual prompt was used, automatically stop autopilot after posting all generated variations
             if not is_queue_mode and raw_prompt:
                 logger_func("[System] Posting manual seluruh variasi selesai. Menghentikan Autopilot untuk mencegah duplikasi.")

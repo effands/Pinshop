@@ -77,12 +77,14 @@ function App() {
     setEditingQueueItemId(item.id)
     setManualBasicTitle(item.basicTitle || '')
     setManualImages(item.referenceImages || [])
+    setManualCategory(item.category || "Default")
     setConfig(prev => ({
       ...prev,
       spintaxLinks: item.spintaxLinks || '',
       seoTitle: item.seoTitle || '',
       seoDesc: item.seoDesc || '',
-      masterPrompt: item.masterPrompt || ''
+      masterPrompt: item.masterPrompt || '',
+      generateCount: item.generateCount || 1
     }))
     window.scrollTo({ top: 0, behavior: 'smooth' })
     showToast("Data antrean dimuat ke editor utama di atas!", "info")
@@ -92,12 +94,14 @@ function App() {
     setEditingQueueItemId(null)
     setManualBasicTitle('')
     setManualImages([])
+    setManualCategory("Default")
     setConfig(prev => ({
       ...prev,
       spintaxLinks: '',
       seoTitle: '',
       seoDesc: '',
-      masterPrompt: ''
+      masterPrompt: '',
+      generateCount: 1
     }))
     showToast("Edit antrean dibatalkan.", "info")
   }
@@ -117,9 +121,11 @@ function App() {
           spintaxLinks: config.spintaxLinks || '',
           referenceImages: manualImages || [],
           status: 'pending',
+          category: manualCategory,
           seoTitle: config.seoTitle || '',
           seoDesc: config.seoDesc || '',
-          masterPrompt: config.masterPrompt || ''
+          masterPrompt: config.masterPrompt || '',
+          generateCount: config.generateCount || 1
         })
       })
       const data = await res.json()
@@ -147,6 +153,7 @@ function App() {
   const [bulkTheme, setBulkTheme] = useState('')
   const [bulkShopeeLink, setBulkShopeeLink] = useState('')
   const [bulkCount, setBulkCount] = useState(5)
+  const [bulkCategory, setBulkCategory] = useState("Default")
   const [isGeneratingBulk, setIsGeneratingBulk] = useState(false)
 
   const generateBulkQueueItems = async () => {
@@ -167,7 +174,8 @@ function App() {
         body: JSON.stringify({
           theme: bulkTheme,
           shopeeLink: bulkShopeeLink,
-          count: bulkCount
+          count: bulkCount,
+          category: bulkCategory
         })
       })
       const data = await res.json()
@@ -275,6 +283,7 @@ function App() {
   }
 
   const [queueItems, setQueueItems] = useState([])
+  const [filterCategory, setFilterCategory] = useState("Semua")
   const [isAddingToQueue, setIsAddingToQueue] = useState(false)
 
   const fetchQueue = async () => {
@@ -301,9 +310,11 @@ function App() {
       spintaxLinks: config.spintaxLinks || "",
       referenceImages: manualImages,
       status: "pending",
+      category: manualCategory,
       seoTitle: config.seoTitle || null,
       seoDesc: config.seoDesc || null,
-      masterPrompt: config.masterPrompt || null
+      masterPrompt: config.masterPrompt || null,
+      generateCount: config.generateCount || 1
     }
     
     try {
@@ -319,6 +330,7 @@ function App() {
         // Clear input inputs and config textareas so the user can quickly add more products
         setManualBasicTitle('')
         setManualImages([])
+        setManualCategory('Default')
         setConfig(prev => ({
           ...prev,
           seoTitle: '',
@@ -347,6 +359,28 @@ function App() {
     }
   }
 
+  const restartQueueItem = async (item) => {
+    try {
+      const res = await fetch(`${API_BASE}/queue/${item.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...item,
+          status: 'pending'
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast("Antrean berhasil di-restart!", "success")
+        fetchQueue()
+      }
+    } catch (e) {
+      showToast("Gagal me-restart item", "error")
+    }
+  }
+
   const clearQueue = async () => {
     askConfirmation("Hapus seluruh isi antrean?", async () => {
       try {
@@ -363,6 +397,7 @@ function App() {
   }
   const [manualImages, setManualImages] = useState([])
   const [manualBasicTitle, setManualBasicTitle] = useState('')
+  const [manualCategory, setManualCategory] = useState('Default')
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false)
 
   const handleManualPaste = (e) => {
@@ -390,6 +425,7 @@ function App() {
     startTime: '',
     stopTime: '',
     targetPost: 0,
+    targetCategory: 'Semua',
     mediaType: 'image',
     generateCount: 1,
     spintaxLinks: '',
@@ -816,6 +852,21 @@ function App() {
                     ))}
                   </select>
                 </div>
+
+                <div className="form-group" style={{flex: '1 1 200px'}}>
+                  <label style={{color: '#8b5cf6', fontWeight: 'bold'}}>Target Grup (Kategori)</label>
+                  <select 
+                    className="form-control" 
+                    style={{borderColor: '#8b5cf6', borderWidth: '2px'}}
+                    value={config.targetCategory || 'Semua'} 
+                    onChange={e => setConfig({...config, targetCategory: e.target.value})}
+                  >
+                    <option value="Semua">Semua Kategori</option>
+                    {[...new Set(queueItems.map(q => q.category || 'Default'))].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
                  
                  <div className="form-group" style={{flex: '1 1 180px'}}>
                    <label>Browser Pinterest</label>
@@ -862,7 +913,6 @@ function App() {
                     type="number" 
                     className="form-control" 
                     min="1"
-                    max="1000"
                     value={config.generateCount || 1} 
                     onChange={e => {
                       const val = parseInt(e.target.value) || 1;
@@ -1271,11 +1321,22 @@ function App() {
                         <input 
                           type="number" 
                           min="1" 
-                          max="20" 
                           className="form-control" 
                           style={{width: '100%', boxSizing: 'border-box'}}
                           value={bulkCount}
                           onChange={e => setBulkCount(parseInt(e.target.value) || 5)}
+                        />
+                      </div>
+                      
+                      <div style={{flex: 1}}>
+                        <label style={{display: 'block', fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '6px', whiteSpace: 'nowrap'}}>KATEGORI (GRUP)</label>
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          placeholder="Default" 
+                          style={{width: '100%', boxSizing: 'border-box'}}
+                          value={bulkCategory}
+                          onChange={e => setBulkCategory(e.target.value)}
                         />
                       </div>
                     </div>
@@ -1322,13 +1383,28 @@ function App() {
                   <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
                     <span>📋</span> Antrean Posting Massal ({queueItems.length} Produk)
                   </h3>
-                  <button className="btn btn-action-delete" style={{padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
-                    Kosongkan Antrean
-                  </button>
+                  
+                  <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                    <select 
+                      className="form-control" 
+                      style={{padding: '4px 8px', fontSize: '12px', width: 'auto'}}
+                      value={filterCategory}
+                      onChange={e => setFilterCategory(e.target.value)}
+                    >
+                      <option value="Semua">Semua Kategori</option>
+                      {[...new Set(queueItems.map(q => q.category || 'Default'))].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+
+                    <button className="btn btn-action-delete" style={{padding: '4px 12px', fontSize: '12px'}} onClick={clearQueue}>
+                      Kosongkan Antrean
+                    </button>
+                  </div>
                 </div>
                 
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px'}}>
-                  {queueItems.map((item, idx) => {
+                  {queueItems.filter(q => filterCategory === "Semua" || (q.category || "Default") === filterCategory).map((item, idx) => {
                     let statusColor = 'var(--text-muted)';
                     let statusBg = 'rgba(0,0,0,0.05)';
                     if (item.status === 'running') {
@@ -1367,8 +1443,9 @@ function App() {
                           </div>
                           
                           <div style={{minWidth: 0, flex: 1}}>
-                            <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                            <p style={{fontSize: '13px', fontWeight: '600', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px'}}>
                               {item.basicTitle}
+                              <span style={{fontSize: '10px', padding: '2px 6px', background: 'var(--brand-primary)', color: 'white', borderRadius: '4px', whiteSpace: 'nowrap'}}>{item.category || 'Default'}</span>
                             </p>
                             <p style={{fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                               {item.spintaxLinks || "Tanpa Link Affiliate"}
@@ -1382,12 +1459,32 @@ function App() {
                             borderRadius: '20px',
                             fontSize: '10px',
                             fontWeight: 'bold',
+                            color: '#e2e8f0',
+                            background: 'rgba(255,255,255,0.05)',
+                          }} title="Target jumlah postingan">
+                            {item.generateCount || 1}x
+                          </span>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '20px',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
                             color: statusColor,
                             background: statusBg,
                             textTransform: 'uppercase'
                           }}>
                             {item.status}
                           </span>
+                          {(item.status === 'success' || item.status === 'failed') && (
+                            <button 
+                              className="btn btn-action-edit" 
+                              style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)'}}
+                              onClick={() => restartQueueItem(item)}
+                              title="Restart"
+                            >
+                              <RefreshCw size={12} />
+                            </button>
+                          )}
                           <button 
                             className="btn btn-action-edit" 
                             style={{padding: '6px', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
@@ -1424,7 +1521,7 @@ function App() {
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'}}>
                 <h3 style={{color: 'rgb(139, 92, 246)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
                   <span style={{display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 8px #8b5cf6'}}></span>
-                  AI Master Prompt (Kirim ke Flow)
+                  Master Prompt AI / Input Manual (Spintax)
                 </h3>
                 <button 
                   className="btn btn-outline" 
@@ -1440,7 +1537,7 @@ function App() {
                 rows="6" 
                 value={config.masterPrompt} 
                 onChange={e => setConfig({...config, masterPrompt: e.target.value})} 
-                placeholder="Master prompt utuh dari AI..."
+                placeholder="Hasil racikan AI akan muncul di sini. Anda juga bisa mengetik manual dengan format Spintax {opsi1|opsi2}..."
                 style={{
                   fontFamily: '"Fira Code", "JetBrains Mono", source-code-pro, Menlo, Monaco, Consolas, monospace',
                   fontSize: '13px',
@@ -1465,7 +1562,7 @@ function App() {
               padding: '20px'
             }}>
               <h3 style={{color: '#E60023', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold'}}>
-                <span>📌</span> Pinterest SEO Metadata
+                <span>📌</span> Pinterest SEO Metadata / Manual Input
               </h3>
               
               <div className="form-group" style={{position: 'relative'}}>
@@ -1485,6 +1582,7 @@ function App() {
                   className="form-control" 
                   value={config.seoTitle} 
                   onChange={e => setConfig({...config, seoTitle: e.target.value})} 
+                  placeholder="Bisa diketik manual dengan format Spintax {opsi1|opsi2}..."
                   style={{
                     fontWeight: '500',
                     fontSize: '14px',
@@ -1511,12 +1609,52 @@ function App() {
                   rows="4" 
                   value={config.seoDesc} 
                   onChange={e => setConfig({...config, seoDesc: e.target.value})}
+                  placeholder="Bisa diketik manual dengan format Spintax {opsi1|opsi2}..."
                   style={{
                     lineHeight: '1.5',
                     borderColor: 'rgba(230, 0, 35, 0.15)',
                     background: 'rgba(255,255,255,0.02)'
                   }}
                 />
+              </div>
+
+              <div style={{display: 'flex', gap: '16px', marginTop: '16px'}}>
+                <div className="form-group" style={{flex: 1}}>
+                  <label style={{margin: 0, fontWeight: '600', fontSize: '12px', display: 'block', marginBottom: '8px'}}>Kategori / Grup (Opsional)</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Contoh: Promo 9.9"
+                    value={manualCategory}
+                    onChange={e => setManualCategory(e.target.value)}
+                    style={{
+                      borderColor: 'rgba(230, 0, 35, 0.15)',
+                      background: 'rgba(255,255,255,0.02)'
+                    }}
+                  />
+                </div>
+
+                <div className="form-group" style={{flex: 1}}>
+                  <label style={{margin: 0, fontWeight: '600', fontSize: '12px', display: 'block', marginBottom: '8px'}}>Target Jumlah Generasi (Looping per Prompt)</label>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                    <input 
+                      type="number" 
+                      className="form-control" 
+                      min="1"
+                      value={config.generateCount || 1} 
+                      onChange={e => setConfig({...config, generateCount: parseInt(e.target.value) || 1})}
+                      style={{
+                        width: '100px',
+                        fontWeight: 'bold',
+                        borderColor: 'rgba(230, 0, 35, 0.15)',
+                        background: 'rgba(255,255,255,0.02)'
+                      }}
+                    />
+                    <span style={{fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.2'}}>
+                      Berapa kali antrean ini akan di-generate/diposting.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1832,12 +1970,12 @@ function App() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(15, 23, 42, 0.95)',
+            background: 'radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.12), transparent 50%), radial-gradient(circle at 80% 70%, rgba(129, 140, 248, 0.12), transparent 50%), rgba(15, 23, 42, 0.96)',
             zIndex: 10000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(12px)',
             transition: 'all 0.3s ease'
           }}>
             {/* Close Button */}

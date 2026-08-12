@@ -21,6 +21,11 @@ IMAGE_ASPECTS = {
     "square":    "IMAGE_ASPECT_RATIO_SQUARE",        # 1:1
     "3x4":       "IMAGE_ASPECT_RATIO_3_4",           # 3:4
     "portrait":  "IMAGE_ASPECT_RATIO_PORTRAIT",      # 9:16
+    "16:9":      "IMAGE_ASPECT_RATIO_LANDSCAPE",
+    "4:3":       "IMAGE_ASPECT_RATIO_4_3",
+    "1:1":       "IMAGE_ASPECT_RATIO_SQUARE",
+    "3:4":       "IMAGE_ASPECT_RATIO_3_4",
+    "9:16":      "IMAGE_ASPECT_RATIO_PORTRAIT",
 }
 
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")

@@ -288,6 +288,8 @@ class QueueItem(BaseModel):
     seoTitle: Optional[str] = None
     seoDesc: Optional[str] = None
     masterPrompt: Optional[str] = None
+    generateCount: Optional[int] = None
+    category: str = "Default"
 
 @app.get("/api/queue")
 async def get_queue_list():
@@ -346,7 +348,9 @@ async def update_queue_item(item_id: str, updated_item: QueueItem):
             if i.get("id") == item_id:
                 data = updated_item.dict()
                 data["id"] = item_id
-                data["status"] = i.get("status", "pending")
+                # Only fallback to old status if updated_item.status is not explicitly provided or is missing
+                if not data.get("status"):
+                    data["status"] = i.get("status", "pending")
                 config["queue"][idx] = data
                 break
         with open(settings.SETTINGS_FILE, "w") as f:
@@ -553,6 +557,7 @@ class BulkGeneratorRequest(BaseModel):
     theme: str
     shopeeLink: str
     count: int = 5
+    category: str = "Default"
 
 @app.post("/api/generate-bulk-ideas")
 async def api_generate_bulk_ideas(req: BulkGeneratorRequest):
@@ -587,7 +592,8 @@ async def api_generate_bulk_ideas(req: BulkGeneratorRequest):
                 "status": "pending",
                 "seoTitle": seo_data.get("seo_title", ""),
                 "seoDesc": seo_data.get("seo_desc", ""),
-                "masterPrompt": seo_data.get("master_prompt", "")
+                "masterPrompt": seo_data.get("master_prompt", ""),
+                "category": req.category
             })
         except Exception as e:
             # If one fails, we can skip or log
