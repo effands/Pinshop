@@ -67,21 +67,35 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                 log(f"[Warning] Gagal mengisi judul secara normal: {e}")
                 
             log("> Mengisi Deskripsi & Hashtag SEO...")
-            desc_input = page.locator("div[role='textbox'], div.public-DraftEditor-content, div[contenteditable='true'], textarea").nth(0)
             try:
-                # Coba cari elemen yang paling mungkin jadi deskripsi (biasanya textbox pertama atau draft-editor)
-                desc_target = page.locator("div[role='textbox'], div.public-DraftEditor-content, div[aria-label*='Describe'], div[aria-label*='description' i], div[contenteditable='true']").first
-                await desc_target.wait_for(state="attached", timeout=5000)
-                await desc_target.click(force=True)
-                # Draft.js / Lexical Editor lebih aman diisi pakai keyboard.type daripada fill
-                await page.keyboard.type(description)
+                # Metode 1: Cari container utama description field
+                wrapper = page.locator("[data-test-id='storyboard-description-field'], [data-test-id='description-field']").first
+                if await wrapper.count() > 0:
+                    await wrapper.click(force=True)
+                else:
+                    # Metode 2: Cari via aria-label
+                    desc_target = page.locator("div[contenteditable='true'][aria-label*='Describe'], div[contenteditable='true'][aria-label*='Deskripsikan'], div[contenteditable='true'][aria-label*='description' i]").first
+                    await desc_target.click(force=True)
+                
+                await page.wait_for_timeout(300)
+                # Pastikan kosong sebelum mengetik
+                await page.keyboard.press("Control+A")
+                await page.keyboard.press("Backspace")
+                await page.wait_for_timeout(200)
+                
+                # Draft.js / Lexical Editor lebih aman diisi pakai keyboard.type
+                await page.keyboard.type(description, delay=20)
+                await page.wait_for_timeout(500)
             except Exception as e:
                 log(f"[Warning] Gagal mengisi deskripsi secara normal: {e}")
-                # Fallback brutal: cari semua contenteditable dan isi yang terakhir (karena biasanya title bukan contenteditable)
+                # Fallback brutal: cari semua contenteditable dan isi yang terakhir
                 try:
                     fallback = page.locator("div[contenteditable='true']").last
                     await fallback.click(force=True)
-                    await page.keyboard.type(description)
+                    await page.wait_for_timeout(300)
+                    await page.keyboard.press("Control+A")
+                    await page.keyboard.press("Backspace")
+                    await page.keyboard.type(description, delay=20)
                 except Exception:
                     pass
                 
@@ -108,6 +122,47 @@ async def upload_to_pinterest(image_path: str, title: str, description: str, lin
                         log("> Papan Pinterest (Board) berhasil dipilih.")
             except Exception as e:
                 log(f"[Warning] Gagal memilih Papan: {e}")
+
+            # Extract tags from description and fill "Tagged topics"
+            import re
+            tags = re.findall(r'#(\w+)', description)
+            if tags:
+                try:
+                    tags = tags[:3]
+                    log(f"> Mengisi Tagged topics: {', '.join(tags)}...")
+                    
+                    tag_input = page.locator("input[placeholder*='Search for a tag'], input[placeholder*='Cari tag'], input[id*='storyboard-selector-tags'], div[role='textbox'][aria-label*='tag' i]").first
+                    try: await tag_input.wait_for(state="attached", timeout=3000)
+                    except: pass
+                        
+                    if await tag_input.count() > 0:
+                        try: await tag_input.evaluate("node => node.disabled = false")
+                        except: pass
+                            
+                        for tag in tags:
+                            await tag_input.click(force=True)
+                            await page.wait_for_timeout(200)
+                            
+                            words = re.findall(r'[A-Z][a-z0-9]*|[a-z0-9]+', tag)
+                            tag_word = words[0] if words else tag
+                            
+                            # Ketik kata kunci dengan perlahan
+                            await page.keyboard.type(tag_word, delay=100)
+                            await page.wait_for_timeout(2000) # Tunggu suggesti muncul
+                            
+                            # Cukup tekan panah bawah dan Enter untuk memilih suggesti pertama yang muncul
+                            await page.keyboard.press("ArrowDown")
+                            await page.wait_for_timeout(500)
+                            await page.keyboard.press("Enter")
+                            await page.wait_for_timeout(1000)
+                            
+                            # Bersihkan sisa teks kalau misalnya tag gagal dipilih dan masih nyangkut di input
+                            await tag_input.fill("")
+                            await page.wait_for_timeout(300)
+                    else:
+                        log("[Warning] Input Tagged Topics tidak ditemukan.")
+                except Exception as e:
+                    log(f"[Warning] Gagal mengisi Tagged topics: {e}")
 
             # Toggle AI disclosure label if available
             try:
